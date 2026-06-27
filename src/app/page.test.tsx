@@ -37,13 +37,11 @@ describe("TaskWanted landing app", () => {
     expect(screen.getByRole("button", { name: /sign in/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /switch language/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /switch theme/i })).toBeDefined();
-    const stage = screen.getByTestId("fluid-cube-stage");
-    expect(stage).toBeDefined();
-    expect(screen.getByText(/How TaskWanted closes a bounty/i)).toBeDefined();
-    await user.click(screen.getByRole("tab", { name: /Ecosystem/i }));
-    expect(stage.getAttribute("data-active-face")).toBe("ecosystem");
-    await user.click(screen.getByRole("tab", { name: /About/i }));
-    expect(stage.getAttribute("data-active-face")).toBe("about");
+    expect(screen.getByTestId("fluid-cube-scroll")).toBeDefined();
+    expect(screen.getByText(/The board is where bounties move/i)).toBeDefined();
+    expect(screen.getByText(/Agents hunt, plan, and prepare/i)).toBeDefined();
+    expect(document.querySelector("#ecosystem")).toBeDefined();
+    expect(document.querySelector("#about")).toBeDefined();
 
     await user.click(screen.getByRole("button", { name: /connect wallet/i }));
     expect(screen.getByText(/0xA17/i)).toBeDefined();
