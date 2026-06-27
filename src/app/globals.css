@@ -250,6 +250,19 @@ button {
   background: rgb(255 255 255 / 0.12);
 }
 
+.nav-icon-ghost {
+  min-width: 36px;
+  border-color: transparent;
+  background: transparent;
+  color: rgb(248 244 232 / 0.82);
+}
+
+.nav-icon-ghost:hover {
+  border-color: transparent;
+  background: rgb(255 255 255 / 0.08);
+  color: #fffaf0;
+}
+
 .nav-avatar {
   display: inline-flex;
   min-height: 40px;

@@ -145,6 +145,23 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <button
+            aria-label="Switch language"
+            className="nav-icon nav-icon-ghost"
+            onClick={toggleLocale}
+            type="button"
+          >
+            <Translate size={18} />
+            <span className="font-mono text-[11px]">{locale.toUpperCase()}</span>
+          </button>
+          <button
+            aria-label="Switch theme"
+            className="nav-icon nav-icon-ghost"
+            onClick={toggleTheme}
+            type="button"
+          >
+            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <button
             aria-label="Connect wallet"
             className="nav-action"
             onClick={() => setWallet((value) => !value)}
@@ -168,23 +185,6 @@ export function SiteHeader() {
               <span>TW</span>
             </Link>
           ) : null}
-          <button
-            aria-label="Switch language"
-            className="nav-icon"
-            onClick={toggleLocale}
-            type="button"
-          >
-            <Translate size={18} />
-            <span className="font-mono text-[11px]">{locale.toUpperCase()}</span>
-          </button>
-          <button
-            aria-label="Switch theme"
-            className="nav-icon"
-            onClick={toggleTheme}
-            type="button"
-          >
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
         </div>
 
         <button
@@ -214,6 +214,24 @@ export function SiteHeader() {
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button
+              aria-label="Switch language"
+              className="nav-action justify-center"
+              onClick={toggleLocale}
+              type="button"
+            >
+              <Translate size={16} />
+              <span>{locale.toUpperCase()}</span>
+            </button>
+            <button
+              aria-label="Switch theme"
+              className="nav-action justify-center"
+              onClick={toggleTheme}
+              type="button"
+            >
+              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+              <span>{theme === "light" ? "Dark" : "Light"}</span>
+            </button>
+            <button
               aria-label="Connect wallet"
               className="nav-action justify-center"
               onClick={() => setWallet((value) => !value)}
@@ -242,24 +260,6 @@ export function SiteHeader() {
                 <span>{locale === "zh" ? "个人中心" : "Profile"}</span>
               </Link>
             ) : null}
-            <button
-              aria-label="Switch language"
-              className="nav-action justify-center"
-              onClick={toggleLocale}
-              type="button"
-            >
-              <Translate size={16} />
-              <span>{locale.toUpperCase()}</span>
-            </button>
-            <button
-              aria-label="Switch theme"
-              className="nav-action justify-center"
-              onClick={toggleTheme}
-              type="button"
-            >
-              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
-              <span>{theme === "light" ? "Dark" : "Light"}</span>
-            </button>
           </div>
         </div>
       ) : null}
