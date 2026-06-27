@@ -113,30 +113,26 @@ export function SiteHeader() {
       : "Sign in";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-background/92 backdrop-blur-xl">
+    <header className="site-header">
       <div className="mx-auto flex h-[68px] w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           aria-label="TaskWanted home"
-          className="flex items-center gap-3 font-mono text-sm font-semibold"
+          className="site-brand"
           href="/"
         >
-          <span className="grid size-8 place-items-center rounded-[6px] bg-foreground text-background">
+          <span className="site-brand-mark">
             TW
           </span>
           <span>TaskWanted</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 rounded-[8px] border border-line bg-surface p-1 md:flex">
+        <nav className="site-nav hidden md:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = item.href === "/" ? pathname === "/" : pathname === item.href;
             return (
               <Link
-                className={`inline-flex h-10 items-center gap-2 rounded-[6px] px-3 text-sm transition ${
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-muted-strong hover:bg-surface-muted hover:text-foreground"
-                }`}
+                className={`site-nav-link ${active ? "active" : ""}`}
                 href={item.href}
                 key={item.href}
               >
@@ -194,7 +190,7 @@ export function SiteHeader() {
         <button
           aria-expanded={menuOpen}
           aria-label="Open menu"
-          className="nav-icon md:hidden"
+          className="nav-icon md:!hidden"
           onClick={() => setMenuOpen((value) => !value)}
           type="button"
         >
@@ -203,11 +199,11 @@ export function SiteHeader() {
       </div>
 
       {menuOpen ? (
-        <div className="border-t border-line bg-background px-4 py-4 md:hidden">
+        <div className="site-mobile-menu md:hidden">
           <div className="grid gap-2">
             {navItems.map((item) => (
               <Link
-                className="rounded-[8px] border border-line bg-surface px-4 py-3 text-sm font-medium"
+                className="site-mobile-link"
                 href={item.href}
                 key={item.href}
                 onClick={() => setMenuOpen(false)}
