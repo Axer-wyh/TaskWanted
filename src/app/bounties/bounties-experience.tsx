@@ -1,23 +1,17 @@
 "use client";
 
 import {
-  ArrowRight,
-  CheckCircle,
-  CreditCard,
-  CurrencyEth,
-  EyeSlash,
   Funnel,
   MagnifyingGlass,
   Plus,
   ShieldCheck,
-  Target,
   Trophy,
   UploadSimple,
-  Warning,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { FluidCubeStage, type FluidCubeFace } from "@/components/fluid-cube-stage";
+import { useTaskWantedLocale } from "@/components/site-header";
 import {
   createBounty,
   priceBountyRisk,
@@ -25,8 +19,6 @@ import {
   type JudgingMode,
   type PaymentRail,
 } from "@/domain/taskwanted";
-import { DecryptedText } from "@/components/decrypted-text";
-import { useTaskWantedLocale } from "@/components/site-header";
 import type { MarketplaceBounty, MarketplaceSnapshot } from "@/lib/mvp-store";
 
 type BountiesExperienceProps = {
@@ -39,8 +31,6 @@ type BountyActivity = {
   kind: "submission" | "payment" | "system";
 };
 
-type SubmissionMode = "idle" | "submitting";
-
 const fallbackSummary =
   "Open competition with blind submissions, funded escrow, and one winner.";
 
@@ -50,8 +40,6 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
   const [bounties, setBounties] = useState(snapshot.bounties);
   const [selectedId, setSelectedId] = useState(snapshot.bounties[0]?.id ?? "");
   const [query, setQuery] = useState("");
-  const [view, setView] = useState<"board" | "post" | "escrow">("board");
-  const [submissionMode, setSubmissionMode] = useState<SubmissionMode>("idle");
   const [submissionNote, setSubmissionNote] = useState("");
   const [activities, setActivities] = useState<BountyActivity[]>([
     {
@@ -62,7 +50,7 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
     {
       id: "act_seed_2",
       kind: "system",
-      text: "Blind submissions hidden from public board until settlement.",
+      text: "Trending face refreshed with live board signals.",
     },
   ]);
   const [form, setForm] = useState({
@@ -128,7 +116,6 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
       },
       ...current,
     ]);
-    setView("board");
   }
 
   function submitBlindWork() {
@@ -152,7 +139,6 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
       ...current,
     ]);
     setSubmissionNote("");
-    setSubmissionMode("idle");
   }
 
   function chooseWinner() {
@@ -187,425 +173,295 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
     ]);
   }
 
-  return (
-    <main className="overflow-hidden">
-      <section className="relative border-b border-line">
-        <div className="pixel-grid absolute inset-0 opacity-70" aria-hidden="true" />
-        <div className="relative mx-auto grid min-h-[calc(100dvh-68px)] max-w-[1440px] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-          <motion.div
-            className="self-end pb-4"
-            initial={false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.52 }}
-          >
-            <DecryptedText
-              className="font-mono text-xs font-semibold text-muted-strong"
-              encryptedClassName="text-accent-soft"
-              text={zh ? "开放竞赏 / 盲提交 / 资金托管" : "Open contest / Blind submissions / Escrow"}
-            />
-            <h1 className="mt-6 max-w-4xl text-[clamp(3.2rem,8vw,7.4rem)] font-semibold leading-[0.88] tracking-normal">
-              {zh ? "悬赏市场完整流程。" : "Open bounty marketplace"}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-7 text-muted-strong">
+  const faces: FluidCubeFace[] = [
+    {
+      id: "trending",
+      label: "Trending",
+      labelZh: "趋势",
+      tone: "hero",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "悬赏公告板" : "Bounty Board"}</p>
+            <h1 className="mt-4 text-6xl font-semibold leading-none">Bounty Board</h1>
+            <p className="cube-copy">
               {zh
-                ? "发布者创建并托管资金，赏金猎人盲提交，平台在争议、支付和审计上兜底。"
-                : "Publishers fund contests, hunters submit blind work, and TaskWanted coordinates dispute, payout, and audit rails."}
+                ? "Trending、悬赏、提交动态和 Mine 都在这个 cube 空间内切换。"
+                : "Track trending contests, open bounties, blind submissions, and your Mine queue."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button className="tw-button accent" onClick={() => setView("post")} type="button">
+              <button className="tw-button accent" type="button">
                 <Plus size={17} weight="bold" />
                 {zh ? "发布悬赏" : "Post bounty"}
               </button>
-              <button className="tw-button secondary" onClick={() => setView("escrow")} type="button">
+              <button className="tw-button secondary" type="button">
                 <ShieldCheck size={17} weight="bold" />
-                {zh ? "查看托管规则" : "Escrow rails"}
+                {zh ? "托管规则" : "Escrow rails"}
               </button>
             </div>
-          </motion.div>
-
-          <div className="tw-panel self-end p-5">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <HeroMetric label={zh ? "风险费率" : "Risk fee"} value="0.1 / 1 / 3%" />
-              <HeroMetric label={zh ? "提交方式" : "Visibility"} value="Blind" />
-              <HeroMetric label={zh ? "奖项" : "Prize"} value="Single" />
-            </div>
-            <div className="mt-5 rounded-[8px] border border-line bg-surface-muted p-4">
-              <p className="font-mono text-xs text-muted">{railLabel(selected?.paymentRail ?? "stripe-sandbox")}</p>
-              <h2 className="mt-3 text-2xl font-semibold">
-                {selected ? (zh ? selected.titleZh : selected.title) : "No bounty"}
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-strong">
-                {selected ? (zh ? selected.summaryZh : selected.summary) : ""}
-              </p>
-            </div>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-[1440px] gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="tw-panel p-4">
-          <div className="flex flex-col gap-3 border-b border-line pb-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-2">
-              <Target size={22} weight="duotone" />
-              <h2 className="text-xl font-semibold">{zh ? "悬赏池" : "Live board"}</h2>
-            </div>
-            <div className="flex items-center gap-2 rounded-[8px] border border-line bg-surface px-3 py-2">
-              <MagnifyingGlass size={16} />
-              <label className="sr-only" htmlFor="bounty-search">
-                Search bounties
-              </label>
-              <input
-                className="w-full bg-transparent text-sm outline-none"
-                id="bounty-search"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={zh ? "搜索悬赏" : "Search"}
-                value={query}
-              />
-              <Funnel size={16} />
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {filtered.map((bounty) => (
-              <button
-                className={`rounded-[8px] border p-4 text-left transition ${
-                  selected?.id === bounty.id
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-line bg-surface hover:bg-surface-muted"
-                }`}
+          <div className="cube-list">
+            {bounties.slice(0, 3).map((bounty) => (
+              <BountyRow
+                bounty={bounty}
                 key={bounty.id}
-                onClick={() => {
-                  setSelectedId(bounty.id);
-                  setView("board");
-                }}
-                type="button"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">{zh ? bounty.titleZh : bounty.title}</p>
-                    <p className="mt-2 text-sm opacity-78">
-                      {zh ? bounty.summaryZh : bounty.summary}
-                    </p>
-                  </div>
-                  <span className="font-mono text-sm">
-                    ${(bounty.bountyCents / 100).toLocaleString()}
-                  </span>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 font-mono text-[11px]">
-                  <span>{bounty.submissions} submissions</span>
-                  <span>{bounty.feeRateBps / 100}% fee</span>
-                  <span>{bounty.status}</span>
-                </div>
-              </button>
+                onSelect={() => setSelectedId(bounty.id)}
+                zh={zh}
+              />
             ))}
           </div>
         </div>
-
-        <div className="min-h-[640px]">
-          <AnimatePresence mode="wait">
-            {view === "post" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="post"
-              >
-                <div className="flex items-center gap-2">
-                  <Plus size={22} weight="duotone" />
-                  <h2 className="text-2xl font-semibold">{zh ? "发布悬赏" : "Post bounty"}</h2>
-                </div>
-                <div className="mt-6 grid gap-4">
-                  <label className="field-label">
-                    Title
-                    <input
-                      className="field-control"
-                      onChange={(event) => setForm({ ...form, title: event.target.value })}
-                      value={form.title}
-                    />
-                  </label>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="field-label">
-                      Budget
-                      <input
-                        className="field-control"
-                        inputMode="numeric"
-                        onChange={(event) =>
-                          setForm({ ...form, budgetUsd: event.target.value })
-                        }
-                        value={form.budgetUsd}
-                      />
-                    </label>
-                    <label className="field-label">
-                      Judging mode
-                      <select
-                        className="field-control"
-                        onChange={(event) =>
-                          setForm({
-                            ...form,
-                            judgingMode: event.target.value as JudgingMode,
-                            disputeSupport: event.target.value === "subjective",
-                          })
-                        }
-                        value={form.judgingMode}
-                      >
-                        <option value="objective">Objective</option>
-                        <option value="manual">Manual review</option>
-                        <option value="subjective">Subjective</option>
-                      </select>
-                    </label>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="field-label">
-                      External sources
-                      <select
-                        className="field-control"
-                        onChange={(event) =>
-                          setForm({ ...form, externalSourceCount: event.target.value })
-                        }
-                        value={form.externalSourceCount}
-                      >
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3+</option>
-                      </select>
-                    </label>
-                    <label className="field-label">
-                      Payment rail
-                      <select
-                        className="field-control"
-                        onChange={(event) =>
-                          setForm({ ...form, paymentRail: event.target.value as PaymentRail })
-                        }
-                        value={form.paymentRail}
-                      >
-                        <option value="stripe-sandbox">Stripe sandbox</option>
-                        <option value="usdc-base-pilot">Base USDC pilot</option>
-                      </select>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[8px] border border-line bg-surface-muted p-4">
-                  <p className="font-mono text-sm font-semibold">
-                    {capitalize(risk.tier)} risk fee {risk.rateBps / 100}%
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-muted-strong">{risk.reasons[0]}</p>
-                </div>
-                <button className="tw-button mt-5 w-full" onClick={createFundedBounty} type="button">
-                  {zh ? "创建并托管" : "Create funded bounty"}
-                  <ArrowRight size={17} weight="bold" />
-                </button>
-              </motion.div>
-            ) : null}
-
-            {view === "escrow" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="escrow"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={22} weight="duotone" />
-                  <h2 className="text-2xl font-semibold">{zh ? "资金与结算" : "Escrow and payout"}</h2>
-                </div>
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <RailCard
-                    body="Stripe Connect sandbox records checkout, webhook replay, duplicate webhook, refund, and failed payout cases."
-                    icon={<CreditCard size={24} weight="duotone" />}
-                    title="Stripe sandbox"
-                  />
-                  <RailCard
-                    body="Base USDC pilot records transaction hash, destination, review state, and manual release status."
-                    icon={<CurrencyEth size={24} weight="duotone" />}
-                    title="Base USDC pilot"
-                  />
-                </div>
-                <div className="mt-5 rounded-[8px] border border-line bg-surface-muted p-4">
-                  <p className="font-semibold">{zh ? "结算规则" : "Settlement rule"}</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-strong">
-                    {zh
-                      ? "MVP 只支持开放盲提交和单一赢家。争议进入后台审查，自动投标与自动提交不在范围内。"
-                      : "MVP supports open blind submissions and one winner. Disputes go to admin review. Automatic bidding and submission stay out of scope."}
-                  </p>
-                </div>
-              </motion.div>
-            ) : null}
-
-            {view === "board" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="board"
-              >
-                {selected ? (
-                  <>
-                    <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="font-mono text-xs text-accent-soft">
-                          {railLabel(selected.paymentRail)} / {selected.feeTier}
-                        </p>
-                        <h2 className="mt-3 text-3xl font-semibold leading-tight">
-                          {zh ? selected.titleZh : selected.title}
-                        </h2>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-strong">
-                          {zh ? selected.summaryZh : selected.summary}
-                        </p>
-                      </div>
-                      <div className="rounded-[8px] bg-accent px-4 py-3 font-mono text-accent-ink">
-                        ${(selected.bountyCents / 100).toLocaleString()}
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid gap-3 sm:grid-cols-4">
-                      <DetailMetric label={zh ? "提交" : "Submissions"} value={String(selected.submissions)} />
-                      <DetailMetric label={zh ? "状态" : "Status"} value={selected.status} />
-                      <DetailMetric label={zh ? "费率" : "Fee"} value={`${selected.feeRateBps / 100}%`} />
-                      <DetailMetric label={zh ? "可见性" : "Visibility"} value="blind" />
-                    </div>
-
-                    <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-                      <div className="rounded-[8px] border border-line bg-surface-muted p-4">
-                        <div className="flex items-center gap-2">
-                          <EyeSlash size={20} weight="duotone" />
-                          <h3 className="font-semibold">{zh ? "盲提交" : "Blind submission"}</h3>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-muted-strong">
-                          {zh
-                            ? "猎人的交付内容只进入发布者审查队列，不在公示板公开。"
-                            : "Hunter work enters publisher review and stays hidden from the public board."}
-                        </p>
-                        {submissionMode === "submitting" ? (
-                          <div className="mt-4 grid gap-3">
-                            <label className="field-label">
-                              Submission note
-                              <textarea
-                                className="field-control min-h-24"
-                                onChange={(event) => setSubmissionNote(event.target.value)}
-                                value={submissionNote}
-                              />
-                            </label>
-                            <button className="tw-button" onClick={submitBlindWork} type="button">
-                              <UploadSimple size={17} weight="bold" />
-                              {zh ? "发送盲提交" : "Send blind submission"}
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            className="tw-button secondary mt-4 w-full"
-                            onClick={() => setSubmissionMode("submitting")}
-                            type="button"
-                          >
-                            <UploadSimple size={17} weight="bold" />
-                            {zh ? "提交作品" : "Submit blind work"}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="rounded-[8px] border border-line bg-surface-muted p-4">
-                        <div className="flex items-center gap-2">
-                          <Trophy size={20} weight="duotone" />
-                          <h3 className="font-semibold">{zh ? "发布者裁决" : "Publisher decision"}</h3>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-muted-strong">
-                          {selected.status === "winner_selected"
-                            ? "Winner selected. Payout release is ready for admin review."
-                            : "Select one winner, then release payout through Stripe sandbox or USDC pilot record."}
-                        </p>
-                        <button
-                          className="tw-button mt-4 w-full"
-                          disabled={selected.status === "winner_selected"}
-                          onClick={chooseWinner}
-                          type="button"
-                        >
-                          <CheckCircle size={17} weight="bold" />
-                          {selected.status === "winner_selected"
-                            ? zh
-                              ? "已选赢家"
-                              : "Winner selected"
-                            : zh
-                              ? "选择赢家"
-                              : "Select winner"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-6" data-testid="bounty-activity">
-                      <h3 className="font-semibold">{zh ? "活动日志" : "Activity"}</h3>
-                      <div className="mt-3 grid gap-2">
-                        {activities.map((activity) => (
-                          <div
-                            className="flex items-start gap-3 rounded-[8px] border border-line bg-surface px-3 py-3 text-sm"
-                            key={activity.id}
-                          >
-                            {activity.kind === "submission" ? (
-                              <UploadSimple className="mt-0.5 text-accent-soft" size={16} />
-                            ) : activity.kind === "payment" ? (
-                              <CreditCard className="mt-0.5 text-success" size={16} />
-                            ) : (
-                              <Warning className="mt-0.5 text-warning" size={16} />
-                            )}
-                            <span>{activity.text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : null}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+      ),
+    },
+    {
+      id: "bounties",
+      label: "Bounties",
+      labelZh: "悬赏",
+      tone: "plain",
+      content: (
+        <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
+          <aside className="cube-list-item">
+            <div className="flex items-center gap-2">
+              <Funnel size={20} weight="duotone" />
+              <h2 className="text-xl font-semibold">{zh ? "筛选" : "Filters"}</h2>
+            </div>
+            <label className="mt-5 flex items-center gap-2 rounded-[8px] border border-line bg-surface px-3 py-2">
+              <MagnifyingGlass size={16} />
+              <span className="sr-only">Search bounties</span>
+              <input
+                className="w-full bg-transparent text-sm outline-none"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search"
+                value={query}
+              />
+            </label>
+            <div className="mt-5 grid gap-2 text-sm text-muted-strong">
+              <span>Skills: Development, AI agents, Research</span>
+              <span>Language: English, Chinese, Bilingual</span>
+              <span>Agent support: Allowed, Planning only</span>
+            </div>
+          </aside>
+          <div className="cube-list">
+            {filtered.map((bounty) => (
+              <BountyRow
+                bounty={bounty}
+                key={bounty.id}
+                onSelect={() => setSelectedId(bounty.id)}
+                zh={zh}
+              />
+            ))}
+          </div>
         </div>
-      </section>
+      ),
+    },
+    {
+      id: "submissions",
+      label: "Submissions",
+      labelZh: "提交",
+      tone: "accent",
+      content: (
+        <div>
+          <p className="cube-kicker">{zh ? "匿名提交动态" : "Blind submission feed"}</p>
+          <h2 className="mt-4 text-5xl font-semibold leading-none">Submissions</h2>
+          <div className="cube-list mt-6" data-testid="bounty-activity">
+            {activities.map((activity) => (
+              <article className="cube-list-item" key={activity.id}>
+                <p className="font-mono text-xs text-muted">{activity.kind}</p>
+                <p className="mt-2 font-semibold">{activity.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "mine",
+      label: "Mine",
+      labelZh: "我的",
+      tone: "dark",
+      content: (
+        <div className="cube-face-grid three">
+          <Summary title="Posted" value="2" detail="Funded contests" />
+          <Summary title="Submitted" value="4" detail="Blind entries waiting" />
+          <Summary title="Agent tracked" value="9" detail="Opportunities in watchlist" />
+        </div>
+      ),
+    },
+    {
+      id: "create",
+      label: "Create",
+      labelZh: "发布",
+      tone: "plain",
+      content: (
+        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <form className="cube-list-item" onSubmit={(event) => event.preventDefault()}>
+            <h2 className="text-3xl font-semibold">{zh ? "发布悬赏" : "Create funded bounty"}</h2>
+            <Field label="Title">
+              <input
+                className="tw-input"
+                onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                value={form.title}
+              />
+            </Field>
+            <Field label="Budget">
+              <input
+                className="tw-input"
+                inputMode="numeric"
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, budgetUsd: event.target.value }))
+                }
+                value={form.budgetUsd}
+              />
+            </Field>
+            <Field label="Judging mode">
+              <select
+                className="tw-input"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    judgingMode: event.target.value as JudgingMode,
+                  }))
+                }
+                value={form.judgingMode}
+              >
+                <option value="objective">Objective</option>
+                <option value="manual">Manual</option>
+                <option value="subjective">Subjective</option>
+              </select>
+            </Field>
+            <button className="tw-button accent mt-5" onClick={createFundedBounty} type="button">
+              {zh ? "创建托管悬赏" : "Create funded bounty"}
+            </button>
+          </form>
+          <div className="cube-list-item">
+            <p className="cube-kicker">{zh ? "AI 风险定价" : "AI risk pricing"}</p>
+            <h3 className="mt-4 text-4xl font-semibold capitalize">
+              {risk.tier} risk fee
+            </h3>
+            <p className="mt-3 text-3xl font-semibold">{risk.rateBps / 100}%</p>
+            <p className="mt-4 text-sm leading-6 text-muted-strong">{risk.reasons[0]}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "detail",
+      label: "Detail",
+      labelZh: "详情",
+      tone: "accent",
+      content: selected ? (
+        <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="cube-list-item">
+            <p className="font-mono text-xs text-accent-soft">{railLabel(selected.paymentRail)}</p>
+            <h2 className="mt-3 text-4xl font-semibold leading-tight">
+              {zh ? selected.titleZh : selected.title}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-strong">
+              {zh ? selected.summaryZh : selected.summary}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-4">
+              <Summary title="Reward" value={`$${(selected.bountyCents / 100).toLocaleString()}`} detail="Escrowed" />
+              <Summary title="Fee" value={`${selected.feeRateBps / 100}%`} detail={selected.feeTier} />
+              <Summary title="Submits" value={String(selected.submissions)} detail="Blind" />
+              <Summary title="Status" value={selected.status} detail="Audit ready" />
+            </div>
+          </div>
+          <div className="cube-list-item">
+            <h3 className="text-xl font-semibold">Blind submission</h3>
+            <button className="tw-button secondary mt-4 w-full" type="button">
+              <UploadSimple size={17} weight="bold" />
+              Submit blind work
+            </button>
+            <Field label="Submission note">
+              <textarea
+                className="tw-input min-h-28"
+                onChange={(event) => setSubmissionNote(event.target.value)}
+                value={submissionNote}
+              />
+            </Field>
+            <button className="tw-button accent mt-4 w-full" onClick={submitBlindWork} type="button">
+              Send blind submission
+            </button>
+            <button className="tw-button mt-3 w-full" onClick={chooseWinner} type="button">
+              <Trophy size={17} weight="bold" />
+              Select winner
+            </button>
+          </div>
+        </div>
+      ) : null,
+    },
+  ];
+
+  return (
+    <main>
+      <FluidCubeStage
+        faces={faces}
+        initialFace="trending"
+        title="Bounty Board"
+        titleZh="悬赏公告板"
+      />
     </main>
   );
 }
 
-function HeroMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-line bg-surface px-3 py-4">
-      <p className="font-mono text-xs text-muted">{label}</p>
-      <p className="mt-2 font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function DetailMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] bg-surface-muted px-3 py-3">
-      <p className="font-mono text-xs text-muted">{label}</p>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function RailCard({
-  body,
-  icon,
-  title,
+function BountyRow({
+  bounty,
+  onSelect,
+  zh,
 }: {
-  body: string;
-  icon: ReactNode;
-  title: string;
+  bounty: MarketplaceBounty;
+  onSelect: () => void;
+  zh: boolean;
 }) {
   return (
-    <article className="rounded-[8px] border border-line bg-surface-muted p-4">
-      {icon}
-      <h3 className="mt-4 font-semibold">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted-strong">{body}</p>
-    </article>
+    <button className="cube-list-item text-left transition hover:-translate-y-0.5" onClick={onSelect} type="button">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-semibold">{zh ? bounty.titleZh : bounty.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-muted-strong">
+            {zh ? bounty.summaryZh : bounty.summary}
+          </p>
+        </div>
+        <span className="rounded-[8px] bg-foreground px-3 py-2 font-mono text-sm text-background">
+          ${(bounty.bountyCents / 100).toLocaleString()}
+        </span>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2 font-mono text-xs text-muted">
+        <span>{bounty.submissions} submissions</span>
+        <span>{bounty.feeRateBps / 100}% fee</span>
+        <span>{bounty.status}</span>
+      </div>
+    </button>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="mt-4 grid gap-2 text-sm font-semibold">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function Summary({
+  title,
+  value,
+  detail,
+}: {
+  title: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="cube-metric">
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <p className="mt-2 text-xs text-muted">{detail}</p>
+    </div>
   );
 }
 
 function railLabel(rail: PaymentRail) {
   return rail === "stripe-sandbox" ? "Stripe sandbox" : "Base USDC pilot";
-}
-
-function capitalize(value: string) {
-  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;
 }

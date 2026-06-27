@@ -3,8 +3,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BellRinging,
-  CheckCircle,
   CurrencyCircleDollar,
   Database,
   PlugsConnected,
@@ -13,9 +11,8 @@ import {
   ShieldCheck,
   Target,
 } from "@phosphor-icons/react";
-import { motion } from "motion/react";
 import type { ReactNode } from "react";
-import { DecryptedText } from "@/components/decrypted-text";
+import { FluidCubeStage, type FluidCubeFace } from "@/components/fluid-cube-stage";
 import { useTaskWantedLocale } from "@/components/site-header";
 import type { MarketplaceSnapshot } from "@/lib/mvp-store";
 
@@ -23,271 +20,235 @@ type HomeExperienceProps = {
   snapshot: MarketplaceSnapshot;
 };
 
-const workflow = [
+const flowSteps = [
   {
-    icon: Target,
-    title: "Publish",
-    titleZh: "发布",
-    body: "Create a funded open contest with blind submissions and single-winner settlement.",
-    bodyZh: "创建已托管资金的开放竞赏，盲提交，单一赢家结算。",
+    title: "Fund a clear bounty",
+    titleZh: "托管清晰悬赏",
+    body: "Sponsors publish a funded brief with deliverables, rules, payment rail, and winner criteria.",
+    bodyZh: "发布者创建已托管任务，声明交付物、规则、支付轨道和获胜标准。",
   },
   {
-    icon: Robot,
-    title: "Assist",
-    titleZh: "辅助",
-    body: "Hunters spend credits on discovery, fit evaluation, and delivery framework preparation.",
-    bodyZh: "赏金猎人用 credits 购买发现、适配评估和交付框架准备能力。",
+    title: "Hunt with agents",
+    titleZh: "用 Agent 接近任务",
+    body: "Hunters configure autonomous agents to discover, assess, and prepare allowed work.",
+    bodyZh: "猎人配置自主 Agent，持续发现机会、评估适配度并准备可执行交付。",
   },
   {
-    icon: Scales,
-    title: "Settle",
-    titleZh: "结算",
-    body: "Publisher selects one winner. Admin can inspect disputes, payment rails, and agent logs.",
-    bodyZh: "发布者选择一名赢家，管理台可审查争议、支付轨道和 Agent 日志。",
+    title: "Submit blind work",
+    titleZh: "盲审提交",
+    body: "Entries stay blind until judgment, keeping the contest open and fair.",
+    bodyZh: "提交在裁决前保持盲审，让开放竞赏更公平。",
+  },
+  {
+    title: "Release payout",
+    titleZh: "释放收益",
+    body: "One winner receives payout, fees and audit events are recorded.",
+    bodyZh: "单一获胜者获得收益，平台记录抽成和审计事件。",
   },
 ];
 
 export function HomeExperience({ snapshot }: HomeExperienceProps) {
   const locale = useTaskWantedLocale();
-  const featured = snapshot.bounties[0];
   const zh = locale === "zh";
 
-  return (
-    <main className="overflow-hidden">
-      <section className="relative min-h-[calc(100dvh-68px)] border-b border-line">
-        <div className="pixel-grid absolute inset-0 opacity-80" aria-hidden="true" />
-        <div className="relative mx-auto grid min-h-[calc(100dvh-68px)] max-w-[1440px] grid-rows-[1fr_auto] px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 py-12 lg:grid-cols-[1.65fr_0.95fr] lg:items-end lg:py-16">
-            <motion.div
-              initial={false}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-5xl self-end"
-            >
-              <DecryptedText
-                className="mb-6 block font-mono text-xs font-semibold text-muted-strong"
-                encryptedClassName="text-accent-soft"
-                text={
-                  zh
-                    ? "AI 原生悬赏市场 / Agent 工作台"
-                    : "AI-native bounty market / Agent workbench"
-                }
-              />
-              <h1 className="max-w-[980px] text-[clamp(3.25rem,10vw,8.5rem)] font-semibold leading-[0.86] tracking-normal">
-                {zh ? "TaskWanted 让任务悬赏进入 Agent 时代。" : "TaskWanted"}
-              </h1>
-              {!zh ? (
-                <p className="mt-6 max-w-2xl text-xl font-medium leading-tight text-muted-strong sm:text-2xl">
-                  Open bounties, blind submissions, hunter-paid AI agents.
-                </p>
-              ) : null}
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link className="tw-button accent" href="/bounties">
-                  {zh ? "进入悬赏市场" : "Open bounty board"}
-                  <ArrowRight size={17} weight="bold" />
-                </Link>
-                <Link className="tw-button secondary" href="/agent">
-                  {zh ? "进入 Agent 工作台" : "Agent workbench"}
-                  <Robot size={17} weight="bold" />
-                </Link>
-              </div>
-            </motion.div>
-
-            <motion.aside
-              initial={false}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.62, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="tw-panel self-end p-4"
-            >
-              <div className="border-b border-line pb-4 font-mono text-xs text-muted">
-                {zh ? "当前热门悬赏" : "Featured live bounty"}
-              </div>
-              <div className="py-5">
-                <p className="font-mono text-sm text-accent-soft">
-                  ${(featured.bountyCents / 100).toLocaleString()}
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold leading-tight">
-                  {zh ? featured.titleZh : featured.title}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-muted-strong">
-                  {zh ? featured.summaryZh : featured.summary}
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-xs">
-                <Metric label={zh ? "费率" : "Fee"} value={`${featured.feeRateBps / 100}%`} />
-                <Metric label={zh ? "提交" : "Submits"} value={String(featured.submissions)} />
-                <Metric label={zh ? "模式" : "Mode"} value="Blind" />
-              </div>
-            </motion.aside>
+  const faces: FluidCubeFace[] = [
+    {
+      id: "hero",
+      label: "Hero",
+      labelZh: "首屏",
+      tone: "hero",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">
+              {zh ? "AI 原生悬赏平台" : "AI-native bounty platform"}
+            </p>
+            <h1 className="cube-title">TaskWanted</h1>
+            <p className="cube-copy">
+              {zh
+                ? "发布开放悬赏。让自主 Agent 发现、执行并放大被动收益。"
+                : "Open bounties for autonomous hunters, blind submissions, and escrow-backed payouts."}
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link className="tw-button accent" href="/bounties">
+                {zh ? "打开悬赏公告板" : "Open bounty board"}
+                <ArrowRight size={17} weight="bold" />
+              </Link>
+              <Link className="tw-button secondary" href="/agent">
+                {zh ? "免费创建" : "Free create"}
+                <Robot size={17} weight="bold" />
+              </Link>
+            </div>
           </div>
-
-          <div className="pixel-band -mx-4 sm:-mx-6 lg:-mx-8" aria-hidden="true">
-            {Array.from({ length: 24 }).map((_, index) => (
-              <span className="pixel-tile" key={index} />
+          <div className="cube-metric-grid">
+            <Metric label={zh ? "盲审引擎" : "Blind engine"} value="Single winner" />
+            <Metric label={zh ? "托管支付" : "Escrow rails"} value="Stripe + Base" />
+            <Metric label={zh ? "自主 Agent" : "Autonomous agents"} value="Autopilot" />
+            <Metric label={zh ? "本地监听" : "Local watcher"} value="No cookies" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "flow",
+      label: "Flow",
+      labelZh: "流程",
+      tone: "accent",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "任务闭环" : "Bounty close loop"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {zh ? "How TaskWanted closes a bounty" : "How TaskWanted closes a bounty"}
+            </h2>
+            <p className="cube-copy">
+              {zh
+                ? "从资金托管、Agent 辅助、盲审提交到裁决放款，每一步都可审计。"
+                : "From funded brief to autonomous support, blind work, judgment, and payout."}
+            </p>
+          </div>
+          <div className="cube-list">
+            {flowSteps.map((step) => (
+              <article className="cube-list-item" key={step.title}>
+                <h3 className="font-semibold">{zh ? step.titleZh : step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-strong">
+                  {zh ? step.bodyZh : step.body}
+                </p>
+              </article>
             ))}
           </div>
         </div>
-      </section>
-
-      <section className="mx-auto grid max-w-[1440px] gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[0.72fr_1.28fr] lg:px-8">
-        <div>
-          <h2 className="text-4xl font-semibold leading-none sm:text-5xl">
-            {zh ? "不是公告板，是结算型产品流程。" : "A complete bounty flow, not a static board."}
-          </h2>
-          <p className="mt-5 max-w-xl text-base leading-7 text-muted-strong">
-            {zh
-              ? "首页只展示入口。完整发布、提交、Agent、外部机会发现和后台审查会进入对应产品页。"
-              : "The home page is the entry. Publishing, submissions, agents, source monitoring, and review live in product pages."}
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {workflow.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <motion.article
-                className="tw-panel p-5"
-                initial={false}
-                key={item.title}
-                transition={{ delay: index * 0.06, duration: 0.46 }}
-                whileHover={{ y: -4 }}
-              >
-                <Icon size={24} weight="duotone" />
-                <h3 className="mt-5 text-lg font-semibold">
-                  {zh ? item.titleZh : item.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-muted-strong">
-                  {zh ? item.bodyZh : item.body}
-                </p>
-              </motion.article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section
-        id="external"
-        className="border-y border-line bg-surface-muted px-4 py-12 sm:px-6 lg:px-8"
-      >
-        <div className="mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="tw-panel p-6">
-            <PlugsConnected size={26} weight="duotone" />
-            <h2 className="mt-5 text-3xl font-semibold">External Bounty Agent Lite</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-strong">
+      ),
+    },
+    {
+      id: "ecosystem",
+      label: "Ecosystem",
+      labelZh: "生态",
+      tone: "plain",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "生态" : "Ecosystem"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {zh ? "任务经济的三方操作系统。" : "A three-sided operating system."}
+            </h2>
+            <p className="cube-copy">
               {zh
-                ? "官方连接器优先使用 OAuth/API。登录态页面由用户设备上的本地 watcher 读取，平台只接收标准化机会记录。"
-                : "Official connectors use OAuth or APIs first. Logged-in pages are read by a local watcher on the hunter device."}
+                ? "发布者、猎人、Agent、外部平台、本地 watcher 和支付托管共同组成闭环。"
+                : "Sponsors, hunters, agents, external boards, local watchers, and payout rails share one workflow."}
             </p>
-            <div className="mt-6 grid gap-3">
-              {snapshot.externalSources.map((source) => (
-                <div
-                  className="grid gap-3 rounded-[8px] border border-line bg-surface p-4 sm:grid-cols-[1fr_auto]"
-                  key={source.id}
-                >
-                  <div>
-                    <p className="font-semibold">{source.name}</p>
-                    <p className="mt-1 font-mono text-xs text-muted">
-                      {source.mode} / {source.cadence}
-                    </p>
-                  </div>
-                  <span className="self-start rounded-[6px] border border-line px-2 py-1 font-mono text-xs">
-                    {source.status}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <PolicyCard
-              icon={<ShieldCheck size={24} weight="duotone" />}
-              title={zh ? "不存第三方凭据" : "No third-party credentials"}
-              body={
-                zh
-                  ? "不会存密码、cookie 或完整登录会话。自定义平台只能上传机会元数据。"
-                  : "No passwords, cookies, or account sessions are stored. Custom sources upload metadata only."
-              }
-            />
-            <PolicyCard
-              icon={<Database size={24} weight="duotone" />}
-              title={zh ? "标准化机会记录" : "Normalized records"}
-              body={
-                zh
-                  ? "URL、标题、平台、适配评分、可执行计划，进入同一机会池。"
-                  : "URL, title, platform, fit score, and plan status land in one opportunity pool."
-              }
-            />
-            <PolicyCard
-              icon={<CurrencyCircleDollar size={24} weight="duotone" />}
-              title="0.1% / 1% / 3%"
-              body={
-                zh
-                  ? "发布者按任务风险支付平台费，猎人按 credits 支付 Agent 能力。"
-                  : "Publisher fees follow task risk. Hunters pay for agents with credits."
-              }
-            />
-            <PolicyCard
-              icon={<BellRinging size={24} weight="duotone" />}
-              title={zh ? "后台最小闭环" : "Admin control loop"}
-              body={
-                zh
-                  ? "下架、争议、支付动作、Agent 日志和 kill switch 都在 MVP 范围内。"
-                  : "Takedowns, disputes, payment actions, agent logs, and kill switch stay in scope."
-              }
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Signal icon={<Target size={22} />} title="Sponsors" body="Fund clear bounty briefs." />
+            <Signal icon={<Robot size={22} />} title="Agents" body="Discover and execute allowed work." />
+            <Signal icon={<PlugsConnected size={22} />} title="Sources" body="OAuth, APIs, and local watcher." />
+            <Signal icon={<CurrencyCircleDollar size={22} />} title="Payouts" body="Escrow, USDC records, audit logs." />
           </div>
         </div>
-      </section>
+      ),
+    },
+    {
+      id: "about",
+      label: "About",
+      labelZh: "关于我们",
+      tone: "dark",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "关于我们" : "About TaskWanted"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {zh ? "让普通用户也能参与任务收益。" : "Let everyday users earn from open work."}
+            </h2>
+            <p className="cube-copy">
+              {zh
+                ? "TaskWanted 把悬赏、Agent、合规自动化和资金托管组合成一个可参与、可验证、可结算的任务平台。"
+                : "TaskWanted combines bounty contests, compliant automation, local monitoring, and escrow into one verifiable flow."}
+            </p>
+          </div>
+          <div className="cube-list">
+            <Signal icon={<ShieldCheck size={22} />} title="Safety" body="No third-party passwords or session storage." />
+            <Signal icon={<Scales size={22} />} title="Fairness" body="Blind submissions and single-winner decisions." />
+            <Signal icon={<Database size={22} />} title="Records" body="Payments, disputes, and agent actions are inspectable." />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "board",
+      label: "Board CTA",
+      labelZh: "公告板",
+      tone: "accent",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "悬赏公告板" : "Bounty board"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {zh ? "市场动态留给公告板。" : "Market motion lives on the board."}
+            </h2>
+            <p className="cube-copy">
+              {zh
+                ? "首页只讲产品机制。Trending、Submissions、Mine 和榜单全部进入悬赏公告板。"
+                : "Home explains the system. Trending, submissions, Mine, and rankings live inside Bounty Board."}
+            </p>
+            <Link className="tw-button accent mt-8" href="/bounties">
+              {zh ? "进入悬赏公告板" : "Open bounty board"}
+              <ArrowRight size={17} weight="bold" />
+            </Link>
+          </div>
+          <div className="cube-metric-grid">
+            <Metric label="Open contests" value={String(snapshot.bounties.length)} />
+            <Metric label="External sources" value={String(snapshot.externalSources.length)} />
+            <Metric label="Agent opportunities" value={String(snapshot.opportunities.length)} />
+            <Metric label="Risk pricing" value="0.1 / 1 / 3%" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "trust",
+      label: "Trust",
+      labelZh: "信任",
+      tone: "plain",
+      content: (
+        <div className="cube-face-grid three">
+          <Signal icon={<ShieldCheck size={22} />} title="Kill switch" body="Admin can pause risky tasks and connectors." />
+          <Signal icon={<Scales size={22} />} title="Blind submissions" body="Contest review protects identities until judgment." />
+          <Signal icon={<Database size={22} />} title="Audit trail" body="Payments, agent runs, and watcher syncs stay inspectable." />
+        </div>
+      ),
+    },
+  ];
 
-      <section
-        id="admin"
-        className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:px-8"
-      >
-        <div className="grid gap-4 md:grid-cols-3">
-          {snapshot.adminSignals.map((signal) => (
-            <article className="border-t border-line py-5" key={signal.label}>
-              <p className="font-mono text-xs text-accent-soft">{signal.status}</p>
-              <h3 className="mt-3 text-xl font-semibold">{signal.label}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-strong">{signal.detail}</p>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link className="tw-button" href="/bounties">
-            {zh ? "发布第一个悬赏" : "Post first bounty"}
-            <CheckCircle size={17} weight="bold" />
-          </Link>
-          <Link className="tw-button secondary" href="/agent">
-            {zh ? "配置 Agent" : "Configure agent"}
-          </Link>
-        </div>
-      </section>
+  return (
+    <main>
+      <FluidCubeStage faces={faces} initialFace="hero" title="TaskWanted home" titleZh="首页" />
     </main>
   );
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[6px] bg-surface-muted px-3 py-3">
-      <p className="text-muted">{label}</p>
-      <p className="mt-1 font-semibold text-foreground">{value}</p>
+    <div className="cube-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
 
-function PolicyCard({
-  body,
+function Signal({
   icon,
   title,
+  body,
 }: {
-  body: string;
   icon: ReactNode;
   title: string;
+  body: string;
 }) {
   return (
-    <article className="tw-panel p-5">
-      {icon}
-      <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-      <p className="mt-3 text-sm leading-6 text-muted-strong">{body}</p>
+    <article className="cube-list-item">
+      <div className="text-accent-soft">{icon}</div>
+      <h3 className="mt-4 font-semibold">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted-strong">{body}</p>
     </article>
   );
 }

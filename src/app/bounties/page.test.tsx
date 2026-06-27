@@ -11,11 +11,15 @@ describe("Bounties product page", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: /Open bounty marketplace/i,
+        name: /Bounty Board/i,
       }),
     ).toBeDefined();
+    expect(screen.getByTestId("fluid-cube-stage")).toBeDefined();
+    expect(screen.getByRole("tab", { name: /Trending/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /Submissions/i })).toBeDefined();
+    expect(screen.getByRole("tab", { name: /Mine/i })).toBeDefined();
 
-    await user.click(screen.getByRole("button", { name: /post bounty/i }));
+    await user.click(screen.getByRole("tab", { name: /Create/i }));
     await user.clear(await screen.findByLabelText(/title/i));
     await user.type(screen.getByLabelText(/title/i), "Score agent safety traces");
     await user.clear(screen.getByLabelText(/budget/i));
@@ -28,8 +32,9 @@ describe("Bounties product page", () => {
     await user.click(screen.getByRole("button", { name: /create funded bounty/i }));
     expect(screen.getAllByText(/Score agent safety traces/i).length).toBeGreaterThan(0);
 
+    await user.click(screen.getByRole("tab", { name: /Detail/i }));
     const submitButtons = await screen.findAllByRole("button", {
-      name: /submit blind work/i,
+      name: /Submit blind work/i,
     });
     await user.click(submitButtons[0]);
     await user.type(
@@ -38,6 +43,7 @@ describe("Bounties product page", () => {
     );
     await user.click(screen.getByRole("button", { name: /send blind submission/i }));
 
+    await user.click(screen.getByRole("tab", { name: /Submissions/i }));
     const activity = screen.getByTestId("bounty-activity");
     expect(within(activity).getByText(/blind submission received/i)).toBeDefined();
   });

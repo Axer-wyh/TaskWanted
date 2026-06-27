@@ -11,6 +11,7 @@ import {
   Sun,
   Target,
   Translate,
+  UserCircle,
   Wallet,
   X,
 } from "@phosphor-icons/react";
@@ -50,8 +51,10 @@ function storedTheme(): Theme {
 
 const navItems = [
   { href: "/", label: "Home", labelZh: "首页", icon: House },
-  { href: "/bounties", label: "Bounties", labelZh: "悬赏", icon: Target },
+  { href: "/bounties", label: "Bounties", labelZh: "悬赏公告板", icon: Target },
   { href: "/agent", label: "Agent", labelZh: "Agent", icon: Robot },
+  { href: "/#ecosystem", label: "Ecosystem", labelZh: "生态", icon: Target },
+  { href: "/#about", label: "About", labelZh: "关于我们", icon: House },
 ];
 
 export function useTaskWantedLocale(): Locale {
@@ -126,7 +129,7 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-1 rounded-[8px] border border-line bg-surface p-1 md:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = item.href === "/" ? pathname === "/" : pathname === item.href;
             return (
               <Link
                 className={`inline-flex h-10 items-center gap-2 rounded-[6px] px-3 text-sm transition ${
@@ -163,6 +166,12 @@ export function SiteHeader() {
             <SignIn size={16} />
             <span>{loginLabel}</span>
           </button>
+          {signedIn ? (
+            <Link aria-label="Open profile" className="nav-avatar" href="/profile">
+              <UserCircle size={24} weight="duotone" />
+              <span>TW</span>
+            </Link>
+          ) : null}
           <button
             aria-label="Switch language"
             className="nav-icon"
@@ -226,6 +235,17 @@ export function SiteHeader() {
               <SignIn size={16} />
               <span>{loginLabel}</span>
             </button>
+            {signedIn ? (
+              <Link
+                aria-label="Open profile"
+                className="nav-action justify-center"
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+              >
+                <UserCircle size={16} />
+                <span>{locale === "zh" ? "个人中心" : "Profile"}</span>
+              </Link>
+            ) : null}
             <button
               aria-label="Switch language"
               className="nav-action justify-center"

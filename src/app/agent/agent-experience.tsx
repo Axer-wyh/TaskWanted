@@ -1,25 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
-  BellRinging,
   Browsers,
-  CheckCircle,
-  Coins,
-  FileLock,
   GearSix,
-  LinkSimple,
-  LockKey,
   PlugsConnected,
   Robot,
   ShieldCheck,
   Sparkle,
-  TerminalWindow,
   Warning,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { FluidCubeStage, type FluidCubeFace } from "@/components/fluid-cube-stage";
+import { useTaskWantedLocale } from "@/components/site-header";
 import {
   ingestExternalOpportunity,
   spendAgentCredits,
@@ -27,8 +22,6 @@ import {
   type AgentPermission,
   type AgentTool,
 } from "@/domain/taskwanted";
-import { DecryptedText } from "@/components/decrypted-text";
-import { useTaskWantedLocale } from "@/components/site-header";
 import type { ExternalOpportunity, MarketplaceSnapshot } from "@/lib/mvp-store";
 
 type AgentExperienceProps = {
@@ -42,17 +35,18 @@ type AgentRun = {
   charged?: number;
 };
 
-const toolLabels: Record<AgentTool, string> = {
+const toolLabels: Record<AgentTool | "autopilot", string> = {
   opportunity_discovery: "Opportunity discovery",
   fit_cost_plan: "Fit and cost plan",
   delivery_framework: "Delivery framework",
+  autopilot: "Autopilot execution",
 };
 
 export function AgentExperience({ snapshot }: AgentExperienceProps) {
   const locale = useTaskWantedLocale();
   const zh = locale === "zh";
   const [credits, setCredits] = useState(5_000);
-  const [activePanel, setActivePanel] = useState<"run" | "sources" | "policy">("run");
+  const [agentCreated, setAgentCreated] = useState(false);
   const [runs, setRuns] = useState<AgentRun[]>([
     {
       id: "run_seed",
@@ -71,14 +65,26 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
   const [watcherMessage, setWatcherMessage] = useState("No third-party cookies stored.");
   const [policyMessage, setPolicyMessage] = useState("");
 
-  const estimatedRun = useMemo(
+  const passiveStats = useMemo(
     () => [
-      "Discover matching third-party bounty sources",
-      "Score fit against hunter skills and credit budget",
-      "Prepare delivery outline and submission checklist",
+      { label: "Passive earnings", value: "$420", detail: "Mock payout attribution" },
+      { label: "Autopilot tasks", value: "6", detail: "Prepared or completed" },
+      { label: "Need approval", value: "2", detail: "Submit actions paused" },
     ],
     [],
   );
+
+  function createFreeAgent() {
+    setAgentCreated(true);
+    setRuns((current) => [
+      {
+        id: `run_${Date.now()}`,
+        title: "Autopilot agent created",
+        detail: "Skill, budget, risk, and passive income boundaries are ready.",
+      },
+      ...current,
+    ]);
+  }
 
   function buyPack(creditsToAdd: number) {
     setCredits((current) => current + creditsToAdd);
@@ -92,12 +98,14 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
     ]);
   }
 
-  function runTool(tool: AgentTool) {
+  function runTool(tool: AgentTool | "autopilot") {
+    const actualTool: AgentTool = tool === "autopilot" ? "delivery_framework" : tool;
+
     const permission = validateAgentPermission({
       requested:
-        tool === "delivery_framework"
+        actualTool === "delivery_framework"
           ? "prepare_delivery_framework"
-          : tool === "fit_cost_plan"
+          : actualTool === "fit_cost_plan"
             ? "fit_cost_plan"
             : "opportunity_discovery",
       publisherAllowed: "prepare_delivery_framework",
@@ -110,14 +118,17 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
     }
 
     try {
-      const result = spendAgentCredits({ balance: credits, tool, units: 1 });
+      const result = spendAgentCredits({ balance: credits, tool: actualTool, units: 1 });
       setCredits(result.balance);
       setPolicyMessage("");
       setRuns((current) => [
         {
           id: `run_${Date.now()}`,
           title: `${toolLabels[tool]} completed`,
-          detail: artifactDetail(tool),
+          detail:
+            tool === "autopilot"
+              ? "Generated research draft, QA checklist, and submit-ready package pending user approval."
+              : artifactDetail(actualTool),
           charged: result.charged,
         },
         ...current,
@@ -136,7 +147,6 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
 
     if (!permission.allowed) {
       setPolicyMessage(permission.reason);
-      setActivePanel("policy");
     }
   }
 
@@ -165,432 +175,264 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
     }
   }
 
-  return (
-    <main className="overflow-hidden">
-      <section className="relative border-b border-line">
-        <div className="pixel-grid absolute inset-0 opacity-70" aria-hidden="true" />
-        <div className="relative mx-auto grid min-h-[calc(100dvh-68px)] max-w-[1440px] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-          <motion.div
-            className="self-end pb-4"
-            initial={false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.52 }}
-          >
-            <DecryptedText
-              className="font-mono text-xs font-semibold text-muted-strong"
-              encryptedClassName="text-accent-soft"
-              text={zh ? "猎人付费 Agent / 外部机会发现" : "Hunter-paid agents / External source discovery"}
-            />
-            <h1 className="mt-6 max-w-4xl text-[clamp(3.2rem,8vw,7.2rem)] font-semibold leading-[0.88] tracking-normal">
-              {zh ? "赏金猎人的 Agent 工作台。" : "Hunter agent workbench"}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-7 text-muted-strong">
+  const faces: FluidCubeFace[] = [
+    {
+      id: "agent-hero",
+      label: "Autonomous",
+      labelZh: "自主",
+      tone: "hero",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "自主赏金猎人 Agent" : "Autonomous hunter agents"}</p>
+            <h1 className="cube-title">{zh ? "自主 Agent 被动赚钱。" : "Autonomous hunter agents"}</h1>
+            <p className="cube-copy">
               {zh
-                ? "Agent 只做发现、评估和交付框架准备。自动申请、竞标、接单、提交和绕过限制都被阻断。"
-                : "Agents discover opportunities, evaluate fit, and prepare delivery frameworks. They do not apply, bid, accept, or submit."}
+                ? "免费创建 Agent，让它发现机会、自动执行可授权任务，并持续积累被动收益。"
+                : "Create an agent that discovers tasks, prepares delivery, automates allowed work, and compounds passive bounty income."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button className="tw-button accent" onClick={() => runTool("opportunity_discovery")} type="button">
+              <button className="tw-button accent" onClick={createFreeAgent} type="button">
                 <Sparkle size={17} weight="bold" />
-                {zh ? "运行发现" : "Run discovery"}
+                {zh ? "免费创建" : "Free create"}
               </button>
-              <button className="tw-button secondary" onClick={() => setActivePanel("sources")} type="button">
-                <PlugsConnected size={17} weight="bold" />
-                {zh ? "配置外部来源" : "Configure watcher"}
-              </button>
+              <Link className="tw-button secondary" href="/agent/knowledge-base">
+                {zh ? "了解更多" : "Learn more"}
+                <ArrowRight size={17} weight="bold" />
+              </Link>
             </div>
-          </motion.div>
-
-          <div className="tw-panel self-end p-5">
-            <div className="flex items-center justify-between gap-4 border-b border-line pb-4">
-              <div>
-                <p className="font-mono text-xs text-muted">{zh ? "猎人余额" : "Hunter balance"}</p>
-                <p className="mt-2 text-4xl font-semibold">{credits.toLocaleString()}</p>
-                <p className="mt-1 text-sm text-muted-strong">credits left</p>
-              </div>
-              <Coins size={46} weight="duotone" />
-            </div>
-            <div className="mt-4 grid gap-3">
-              {snapshot.agentCreditPacks.map((pack) => (
-                <button
-                  className="flex items-center justify-between rounded-[8px] border border-line bg-surface px-4 py-3 text-left transition hover:bg-surface-muted"
-                  key={pack.name}
-                  onClick={() => buyPack(pack.credits)}
-                  type="button"
-                >
-                  <span>
-                    <span className="block font-semibold">{pack.name}</span>
-                    <span className="mt-1 block text-sm text-muted">{pack.bestFor}</span>
-                  </span>
-                  <span className="font-mono text-sm">
-                    {pack.credits.toLocaleString()} / ${pack.priceUsd}
-                  </span>
-                </button>
-              ))}
-            </div>
+          </div>
+          <div className="cube-metric-grid">
+            <Metric label="Credit balance" value={credits.toLocaleString()} />
+            <Metric label="Agents created" value={agentCreated ? "1" : "0"} />
+            <Metric label="Autopilot tasks" value="6" />
+            <Metric label="Passive earnings" value="$420" />
           </div>
         </div>
-      </section>
-
-      <section className="mx-auto grid max-w-[1440px] gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:px-8">
-        <aside className="tw-panel p-4">
-          <div className="grid gap-2">
-            <PanelButton
-              active={activePanel === "run"}
-              icon={<Robot size={18} />}
-              label={zh ? "Agent 运行" : "Agent runs"}
-              onClick={() => setActivePanel("run")}
-            />
-            <PanelButton
-              active={activePanel === "sources"}
-              icon={<Browsers size={18} />}
-              label={zh ? "外部来源" : "External sources"}
-              onClick={() => setActivePanel("sources")}
-            />
-            <PanelButton
-              active={activePanel === "policy"}
-              icon={<ShieldCheck size={18} />}
-              label={zh ? "权限边界" : "Policy guardrails"}
-              onClick={() => setActivePanel("policy")}
-            />
+      ),
+    },
+    {
+      id: "create-agent",
+      label: "Free create",
+      labelZh: "免费创建",
+      tone: "accent",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "创建设置" : "Create setup"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">Free create</h2>
+            <p className="cube-copy">
+              {zh
+                ? "配置技能、语言、最低赏金、风险边界和可投入时间。"
+                : "Set skills, language, minimum bounty, risk limit, and available work time."}
+            </p>
+            <button className="tw-button accent mt-8" onClick={createFreeAgent} type="button">
+              <Robot size={17} weight="bold" />
+              {zh ? "免费创建 hunter agent" : "Free create hunter agent"}
+            </button>
           </div>
-
-          <div className="mt-5 rounded-[8px] border border-line bg-surface-muted p-4">
-            <p className="font-semibold">{zh ? "运行计划" : "Execution plan"}</p>
-            <div className="mt-3 grid gap-2">
-              {estimatedRun.map((item) => (
-                <div className="flex items-start gap-2 text-sm text-muted-strong" key={item}>
-                  <CheckCircle className="mt-0.5 text-accent-soft" size={16} weight="fill" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
+          <div className="cube-list">
+            <ConfigLine label="Skills" value="Research, writing, QA, AI agents" />
+            <ConfigLine label="Language" value="English, Chinese, bilingual" />
+            <ConfigLine label="Risk boundary" value="No unauthorized apply, bid, accept, submit" />
+            <ConfigLine label="Minimum bounty" value="$180" />
           </div>
-        </aside>
-
-        <div className="min-h-[680px]">
-          <AnimatePresence mode="wait">
-            {activePanel === "run" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="run"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold">{zh ? "Agent 能力" : "Agent capabilities"}</h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-strong">
-                      {zh
-                        ? "每次运行都会扣减 credits，并生成可审计日志和交付物框架。"
-                        : "Each run consumes credits and leaves auditable logs plus delivery artifacts."}
-                    </p>
-                  </div>
-                  <button className="tw-button secondary" onClick={tryExternalSubmit} type="button">
-                    <LockKey size={17} weight="bold" />
-                    {zh ? "尝试禁止动作" : "Try external submit"}
-                  </button>
-                </div>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  <RunCard
-                    body="Find matching tasks across TaskWanted, Upwork, Freelancer.com, and approved local watcher sources."
-                    cta="Run discovery"
-                    icon={<BellRinging size={24} weight="duotone" />}
-                    onRun={() => runTool("opportunity_discovery")}
-                    price="50 credits"
-                    title="Discovery"
-                  />
-                  <RunCard
-                    body="Estimate fit, time, cost, delivery risk, and whether the task is worth a hunter bid."
-                    cta="Run fit plan"
-                    icon={<GearSix size={24} weight="duotone" />}
-                    onRun={() => runTool("fit_cost_plan")}
-                    price="120 credits"
-                    title="Fit and plan"
-                  />
-                  <RunCard
-                    body="Prepare outlines, acceptance checks, evidence folders, and submission-ready framing."
-                    cta="Prepare framework"
-                    icon={<FileLock size={24} weight="duotone" />}
-                    onRun={() => runTool("delivery_framework")}
-                    price="220 credits"
-                    title="Delivery framework"
-                  />
-                </div>
-
-                {policyMessage ? (
-                  <div className="mt-5 rounded-[8px] border border-danger bg-surface-muted p-4 text-sm text-danger">
-                    {policyMessage}
-                  </div>
-                ) : null}
-
-                <div className="mt-6">
-                  <h3 className="font-semibold">{zh ? "Agent 日志" : "Agent logs"}</h3>
-                  <div className="mt-3 grid gap-3">
-                    {runs.map((run) => (
-                      <div className="rounded-[8px] border border-line bg-surface p-4" key={run.id}>
-                        <div className="flex items-start justify-between gap-4">
-                          <p className="font-semibold">{run.title}</p>
-                          {run.charged ? (
-                            <span className="font-mono text-xs text-muted">-{run.charged}</span>
-                          ) : null}
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-muted-strong">{run.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ) : null}
-
-            {activePanel === "sources" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="sources"
-              >
-                <div className="flex items-center gap-2">
-                  <PlugsConnected size={22} weight="duotone" />
-                  <h2 className="text-2xl font-semibold">{zh ? "外部机会来源" : "External sources"}</h2>
-                </div>
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {snapshot.externalSources.map((source) => (
-                    <article className="rounded-[8px] border border-line bg-surface-muted p-4" key={source.id}>
-                      <p className="font-semibold">{source.name}</p>
-                      <p className="mt-2 font-mono text-xs text-muted">
-                        {source.platform} / {source.mode}
-                      </p>
-                      <p className="mt-4 rounded-[6px] border border-line px-2 py-1 font-mono text-xs">
-                        {source.status}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                  <div className="rounded-[8px] border border-line bg-surface-muted p-4">
-                    <div className="flex items-center gap-2">
-                      <TerminalWindow size={20} weight="duotone" />
-                      <h3 className="font-semibold">{zh ? "本地 watcher 配置" : "Local watcher config"}</h3>
-                    </div>
-                    <div className="mt-4 grid gap-3">
-                      <label className="field-label">
-                        Target URL
-                        <input
-                          className="field-control"
-                          onChange={(event) =>
-                            setWatcherForm({ ...watcherForm, url: event.target.value })
-                          }
-                          value={watcherForm.url}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Schedule
-                        <input
-                          className="field-control"
-                          onChange={(event) =>
-                            setWatcherForm({ ...watcherForm, schedule: event.target.value })
-                          }
-                          value={watcherForm.schedule}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Keywords
-                        <input
-                          className="field-control"
-                          onChange={(event) =>
-                            setWatcherForm({ ...watcherForm, keywords: event.target.value })
-                          }
-                          value={watcherForm.keywords}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Parsing hints
-                        <textarea
-                          className="field-control min-h-24"
-                          onChange={(event) =>
-                            setWatcherForm({ ...watcherForm, hints: event.target.value })
-                          }
-                          value={watcherForm.hints}
-                        />
-                      </label>
-                    </div>
-                    <button className="tw-button mt-4 w-full" onClick={syncLocalSource} type="button">
-                      <LinkSimple size={17} weight="bold" />
-                      {zh ? "同步本地来源" : "Sync local source"}
-                    </button>
-                    <p className="mt-3 text-sm text-muted-strong">{watcherMessage}</p>
-                  </div>
-
-                  <div data-testid="watcher-results">
-                    <h3 className="font-semibold">{zh ? "机会池" : "Opportunity pool"}</h3>
-                    <div className="mt-3 grid gap-3">
-                      {opportunities.map((opportunity) => (
-                        <article
-                          className="rounded-[8px] border border-line bg-surface p-4"
-                          key={opportunity.id}
-                        >
-                          <p className="font-semibold">{opportunity.title}</p>
-                          <p className="mt-2 font-mono text-xs text-muted">
-                            {opportunity.platform} / fit {opportunity.fitScore} / {opportunity.level}
-                          </p>
-                          <p className="mt-3 truncate text-sm text-muted-strong">
-                            {opportunity.url}
-                          </p>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : null}
-
-            {activePanel === "policy" ? (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="tw-panel p-5"
-                exit={{ opacity: 0, y: -12 }}
-                initial={false}
-                key="policy"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={22} weight="duotone" />
-                  <h2 className="text-2xl font-semibold">{zh ? "权限边界" : "Guardrails"}</h2>
-                </div>
-                {policyMessage ? (
-                  <div className="mt-5 rounded-[8px] border border-danger bg-surface-muted p-4 text-sm text-danger">
-                    {policyMessage}
-                  </div>
-                ) : null}
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <PolicyItem
-                    title="Allowed"
-                    body="Opportunity discovery, fit and cost evaluation, execution planning, and delivery framework preparation."
-                    icon={<CheckCircle size={24} weight="duotone" />}
-                  />
-                  <PolicyItem
-                    title="Blocked"
-                    body="Automatic application, bidding, acceptance, submission, CAPTCHA solving, paywall bypass, and credential storage."
-                    icon={<Warning size={24} weight="duotone" />}
-                  />
-                  <PolicyItem
-                    title="Local watcher"
-                    body="Runs on user device and sends normalized opportunity records, not account sessions."
-                    icon={<TerminalWindow size={24} weight="duotone" />}
-                  />
-                  <PolicyItem
-                    title="Audit trail"
-                    body="Every agent tool call produces policy, credit, artifact, and admin-inspectable log records."
-                    icon={<FileLock size={24} weight="duotone" />}
-                  />
-                </div>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
         </div>
-      </section>
+      ),
+    },
+    {
+      id: "autopilot",
+      label: "Autopilot",
+      labelZh: "自动执行",
+      tone: "dark",
+      content: (
+        <div className="cube-face-grid two">
+          <div>
+            <p className="cube-kicker">{zh ? "自动执行" : "Autopilot execution"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {zh ? "允许的任务，自动推进。" : "Allowed work moves by itself."}
+            </h2>
+            <p className="cube-copy">
+              {zh
+                ? "Agent 自动拆解任务、收集资料、生成草稿、检查交付包，需要提交时暂停等待确认。"
+                : "The agent plans, researches, drafts, checks, and pauses before actions that need approval."}
+            </p>
+            <button className="tw-button accent mt-8" onClick={() => runTool("autopilot")} type="button">
+              <GearSix size={17} weight="bold" />
+              {zh ? "运行 Autopilot" : "Run autopilot"}
+            </button>
+          </div>
+          <div className="cube-list">
+            <ConfigLine label="Credits left" value={credits.toLocaleString()} />
+            {passiveStats.map((stat) => (
+              <ConfigLine key={stat.label} label={stat.label} value={`${stat.value} - ${stat.detail}`} />
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "sources",
+      label: "Sources",
+      labelZh: "来源",
+      tone: "plain",
+      content: (
+        <div className="grid gap-5 lg:grid-cols-[0.84fr_1.16fr]">
+          <div className="cube-list-item">
+            <div className="flex items-center gap-2">
+              <Browsers size={22} weight="duotone" />
+              <h2 className="text-3xl font-semibold">{zh ? "外部来源" : "External sources"}</h2>
+            </div>
+            <Field label="Target URL">
+              <input
+                className="tw-input"
+                onChange={(event) => setWatcherForm((current) => ({ ...current, url: event.target.value }))}
+                value={watcherForm.url}
+              />
+            </Field>
+            <Field label="Keywords">
+              <input
+                className="tw-input"
+                onChange={(event) =>
+                  setWatcherForm((current) => ({ ...current, keywords: event.target.value }))
+                }
+                value={watcherForm.keywords}
+              />
+            </Field>
+            <button className="tw-button accent mt-5" onClick={syncLocalSource} type="button">
+              <PlugsConnected size={17} weight="bold" />
+              Sync local source
+            </button>
+            <p className="mt-4 text-sm leading-6 text-muted-strong">{watcherMessage}</p>
+          </div>
+          <div className="cube-list" data-testid="watcher-results">
+            {opportunities.map((opportunity) => (
+              <article className="cube-list-item" key={opportunity.id}>
+                <p className="font-mono text-xs text-muted">{opportunity.platform}</p>
+                <h3 className="mt-2 font-semibold">{opportunity.title}</h3>
+                <p className="mt-2 text-sm text-muted-strong">{opportunity.url}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "earnings",
+      label: "Earnings",
+      labelZh: "收益",
+      tone: "accent",
+      content: (
+        <div className="cube-face-grid two">
+          <div className="cube-face-grid three">
+            {passiveStats.map((stat) => (
+              <Metric key={stat.label} label={stat.label} value={stat.value} />
+            ))}
+          </div>
+          <div className="cube-list-item">
+            <p className="cube-kicker">{zh ? "Agent credits" : "Agent credits"}</p>
+            <h2 className="mt-4 text-5xl font-semibold leading-none">
+              {credits.toLocaleString()}
+            </h2>
+            <p className="cube-copy">
+              {zh
+                ? "猎人用 credits 购买 agent 执行能力，所有消耗都进入日志。"
+                : "Hunters fund agent execution with credits, and every spend is logged."}
+            </p>
+            <button className="tw-button accent mt-6" onClick={() => buyPack(1_000)} type="button">
+              {zh ? "购买 1,000 credits" : "Buy 1,000 credits"}
+            </button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "logs",
+      label: "Logs",
+      labelZh: "日志",
+      tone: "plain",
+      content: (
+        <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
+          <div className="cube-list">
+            {runs.map((run) => (
+              <article className="cube-list-item" key={run.id}>
+                <p className="font-semibold">{run.title}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-strong">{run.detail}</p>
+                {run.charged ? <p className="mt-2 font-mono text-xs text-muted">-{run.charged} credits</p> : null}
+              </article>
+            ))}
+          </div>
+          <div className="cube-list-item">
+            <ShieldCheck size={24} weight="duotone" />
+            <h2 className="mt-4 text-2xl font-semibold">Policy guardrails</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-strong">
+              Allowed automation stays inside TaskWanted tasks or platform-approved API/OAuth actions.
+            </p>
+            <button className="tw-button secondary mt-5" onClick={tryExternalSubmit} type="button">
+              <Warning size={17} weight="bold" />
+              Try external submit
+            </button>
+            {policyMessage ? (
+              <p className="mt-4 rounded-[8px] border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+                {policyMessage}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <main>
+      <FluidCubeStage
+        faces={faces}
+        initialFace="agent-hero"
+        title="Autonomous hunter agents"
+        titleZh="自主赏金猎人 Agent"
+      />
     </main>
   );
 }
 
-function PanelButton({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <button
-      className={`flex items-center gap-3 rounded-[8px] border px-4 py-3 text-left text-sm font-semibold transition ${
-        active
-          ? "border-foreground bg-foreground text-background"
-          : "border-line bg-surface hover:bg-surface-muted"
-      }`}
-      onClick={onClick}
-      type="button"
-    >
-      {icon}
+    <label className="mt-4 grid gap-2 text-sm font-semibold">
       {label}
-    </button>
+      {children}
+    </label>
   );
 }
 
-function RunCard({
-  body,
-  cta,
-  icon,
-  onRun,
-  price,
-  title,
-}: {
-  body: string;
-  cta: string;
-  icon: ReactNode;
-  onRun: () => void;
-  price: string;
-  title: string;
-}) {
+function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-[8px] border border-line bg-surface-muted p-4">
-      {icon}
-      <h3 className="mt-4 font-semibold">{title}</h3>
-      <p className="mt-2 min-h-24 text-sm leading-6 text-muted-strong">{body}</p>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="font-mono text-xs text-muted">{price}</span>
-        <button className="tw-button secondary min-h-10 px-3" onClick={onRun} type="button">
-          {cta}
-          <ArrowRight size={15} weight="bold" />
-        </button>
-      </div>
-    </article>
+    <div className="cube-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
-function PolicyItem({
-  body,
-  icon,
-  title,
-}: {
-  body: string;
-  icon: ReactNode;
-  title: string;
-}) {
+function ConfigLine({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-[8px] border border-line bg-surface-muted p-4">
-      {icon}
-      <h3 className="mt-4 font-semibold">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted-strong">{body}</p>
+    <article className="cube-list-item">
+      <p className="font-mono text-xs text-muted">{label}</p>
+      <p className="mt-2 font-semibold">{value}</p>
     </article>
   );
 }
 
 function artifactDetail(tool: AgentTool) {
   if (tool === "opportunity_discovery") {
-    return "Opportunity discovery completed with ranked sources, duplicate checks, and source policy notes.";
+    return "Found external and TaskWanted opportunities with fit score and suggested next action.";
   }
-
   if (tool === "fit_cost_plan") {
-    return "Fit and cost plan completed with estimated effort, risks, and go or no-go recommendation.";
+    return "Estimated effort, competition level, payout risk, and execution plan.";
   }
-
-  return "Delivery framework completed with outline, evidence checklist, and submission-ready package structure.";
+  return "Prepared delivery framework, QA checklist, and submission package.";
 }
 
-function watcherTitle(urlValue: string) {
-  try {
-    const url = new URL(urlValue);
-    const segment = url.pathname.split("/").filter(Boolean).at(-1);
-    return segment || url.hostname;
-  } catch {
-    return "Custom watched opportunity";
-  }
+function watcherTitle(url: string) {
+  const tail = url.split("/").filter(Boolean).at(-1) ?? "custom-opportunity";
+  return tail.replaceAll("-", " ");
 }
