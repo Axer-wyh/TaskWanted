@@ -70,6 +70,6 @@
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
 - [x] Start a local dev server and run browser verification with a dedicated test agent across `/`, `/bounties`, `/agent`, `/profile`, and `/agent/knowledge-base`.
-- [ ] Commit all changes.
-- [ ] Add or verify GitHub remote `https://github.com/Axer-wyh/TaskWanted.git`.
-- [ ] Push branch `codex/taskwanted-mvp`.
+- [x] Commit all changes.
+- [x] Add or verify GitHub remote `https://github.com/Axer-wyh/TaskWanted.git`.
+- [x] Push branch `codex/taskwanted-mvp`.
