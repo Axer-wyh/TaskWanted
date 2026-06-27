@@ -15,10 +15,10 @@ The MVP implements:
 
 ```bash
 npm install
-npm run dev
+npm run dev -- --port 3107
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3107](http://localhost:3107).
 
 ## Verification
 
@@ -40,7 +40,7 @@ npm run build
 Run a one-off watcher sync from the hunter device:
 
 ```bash
-npm run watcher:once -- https://example.com/tasks http://localhost:3000
+npm run watcher:once -- https://example.com/tasks http://localhost:3107
 ```
 
 The watcher extracts a page title and sends normalized opportunity metadata to TaskWanted. It does not send session cookies, passwords, or third-party credentials.
