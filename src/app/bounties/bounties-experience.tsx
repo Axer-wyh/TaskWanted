@@ -10,7 +10,6 @@ import {
 } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { FluidCubeStage, type FluidCubeFace } from "@/components/fluid-cube-stage";
 import { useTaskWantedLocale } from "@/components/site-header";
 import {
   createBounty,
@@ -50,7 +49,7 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
     {
       id: "act_seed_2",
       kind: "system",
-      text: "Trending face refreshed with live board signals.",
+      text: "Trending board refreshed with live marketplace signals.",
     },
   ]);
   const [form, setForm] = useState({
@@ -112,7 +111,9 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
       {
         id: `act_${Date.now()}`,
         kind: "payment",
-        text: `${railLabel(form.paymentRail)} escrow created for $${Number(form.budgetUsd || 0).toLocaleString()}.`,
+        text: `${railLabel(form.paymentRail)} escrow created for $${Number(
+          form.budgetUsd || 0,
+        ).toLocaleString()}.`,
       },
       ...current,
     ]);
@@ -134,7 +135,9 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
       {
         id: `act_${Date.now()}`,
         kind: "submission",
-        text: `Blind submission received: ${submissionNote || "Delivery package ready for publisher review."}`,
+        text: `Blind submission received: ${
+          submissionNote || "Delivery package ready for publisher review."
+        }`,
       },
       ...current,
     ]);
@@ -173,54 +176,56 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
     ]);
   }
 
-  const faces: FluidCubeFace[] = [
-    {
-      id: "trending",
-      label: "Trending",
-      labelZh: "趋势",
-      tone: "hero",
-      content: (
-        <div className="cube-face-grid two">
+  return (
+    <main className="task-page" data-testid="bounties-page" data-theme="dark">
+      <section className="task-hero">
+        <div className="task-page-shell task-hero-grid">
           <div>
-            <p className="cube-kicker">{zh ? "悬赏公告板" : "Bounty Board"}</p>
-            <h1 className="mt-4 text-6xl font-semibold leading-none">Bounty Board</h1>
-            <p className="cube-copy">
+            <p className="task-kicker">{zh ? "悬赏公告板" : "Bounty Board"}</p>
+            <h1 className="task-title">{zh ? "开放悬赏，公开竞争。" : "Bounty Board"}</h1>
+            <p className="task-copy">
               {zh
-                ? "Trending、悬赏、提交动态和 Mine 都在这个 cube 空间内切换。"
-                : "Track trending contests, open bounties, blind submissions, and your Mine queue."}
+                ? "浏览趋势任务、发布托管悬赏、接收盲提交，并在同一审计链路中选择赢家。"
+                : "Track trending contests, open bounties, blind submissions, and your Mine queue in one continuous board."}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button className="tw-button accent" type="button">
+            <div className="task-actions">
+              <a className="tw-button accent" href="#create-bounty">
                 <Plus size={17} weight="bold" />
                 {zh ? "发布悬赏" : "Post bounty"}
-              </button>
-              <button className="tw-button secondary" type="button">
+              </a>
+              <a className="tw-button secondary" href="#detail">
                 <ShieldCheck size={17} weight="bold" />
-                {zh ? "托管规则" : "Escrow rails"}
-              </button>
+                {zh ? "查看托管流程" : "Escrow flow"}
+              </a>
             </div>
           </div>
-          <div className="cube-list">
-            {bounties.slice(0, 3).map((bounty) => (
-              <BountyRow
-                bounty={bounty}
-                key={bounty.id}
-                onSelect={() => setSelectedId(bounty.id)}
-                zh={zh}
-              />
-            ))}
+          <div className="task-cube-scene" aria-hidden="true">
+            <div className="task-cube">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <span className={`task-cube-face face-${index}`} key={index} />
+              ))}
+            </div>
           </div>
         </div>
-      ),
-    },
-    {
-      id: "bounties",
-      label: "Bounties",
-      labelZh: "悬赏",
-      tone: "plain",
-      content: (
-        <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
-          <aside className="cube-list-item">
+      </section>
+
+      <Section id="trending" kicker={zh ? "趋势" : "Trending"} title="Trending bounties">
+        <div className="task-panel-grid three">
+          {bounties.slice(0, 3).map((bounty) => (
+            <BountyRow
+              bounty={bounty}
+              key={bounty.id}
+              onSelect={() => setSelectedId(bounty.id)}
+              selected={bounty.id === selected?.id}
+              zh={zh}
+            />
+          ))}
+        </div>
+      </Section>
+
+      <Section id="bounties" kicker={zh ? "任务列表" : "Open board"} title="Browse funded work">
+        <div className="task-split narrow-left">
+          <aside className="task-panel">
             <div className="flex items-center gap-2">
               <Funnel size={20} weight="duotone" />
               <h2 className="text-xl font-semibold">{zh ? "筛选" : "Filters"}</h2>
@@ -241,65 +246,29 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
               <span>Agent support: Allowed, Planning only</span>
             </div>
           </aside>
-          <div className="cube-list">
+          <div className="task-list">
             {filtered.map((bounty) => (
               <BountyRow
                 bounty={bounty}
                 key={bounty.id}
                 onSelect={() => setSelectedId(bounty.id)}
+                selected={bounty.id === selected?.id}
                 zh={zh}
               />
             ))}
           </div>
         </div>
-      ),
-    },
-    {
-      id: "submissions",
-      label: "Submissions",
-      labelZh: "提交",
-      tone: "accent",
-      content: (
-        <div>
-          <p className="cube-kicker">{zh ? "匿名提交动态" : "Blind submission feed"}</p>
-          <h2 className="mt-4 text-5xl font-semibold leading-none">Submissions</h2>
-          <div className="cube-list mt-6" data-testid="bounty-activity">
-            {activities.map((activity) => (
-              <article className="cube-list-item" key={activity.id}>
-                <p className="font-mono text-xs text-muted">{activity.kind}</p>
-                <p className="mt-2 font-semibold">{activity.text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "mine",
-      label: "Mine",
-      labelZh: "我的",
-      tone: "dark",
-      content: (
-        <div className="cube-face-grid three">
-          <Summary title="Posted" value="2" detail="Funded contests" />
-          <Summary title="Submitted" value="4" detail="Blind entries waiting" />
-          <Summary title="Agent tracked" value="9" detail="Opportunities in watchlist" />
-        </div>
-      ),
-    },
-    {
-      id: "create",
-      label: "Create",
-      labelZh: "发布",
-      tone: "plain",
-      content: (
-        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <form className="cube-list-item" onSubmit={(event) => event.preventDefault()}>
-            <h2 className="text-3xl font-semibold">{zh ? "发布悬赏" : "Create funded bounty"}</h2>
+      </Section>
+
+      <Section id="create-bounty" kicker={zh ? "发布" : "Create"} title="Create funded bounty">
+        <div className="task-split">
+          <form className="task-panel" onSubmit={(event) => event.preventDefault()}>
             <Field label="Title">
               <input
                 className="tw-input"
-                onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, title: event.target.value }))
+                }
                 value={form.title}
               />
             </Field>
@@ -333,88 +302,134 @@ export function BountiesExperience({ snapshot }: BountiesExperienceProps) {
               {zh ? "创建托管悬赏" : "Create funded bounty"}
             </button>
           </form>
-          <div className="cube-list-item">
-            <p className="cube-kicker">{zh ? "AI 风险定价" : "AI risk pricing"}</p>
-            <h3 className="mt-4 text-4xl font-semibold capitalize">
-              {risk.tier} risk fee
-            </h3>
+          <div className="task-panel accent-panel">
+            <p className="task-kicker">{zh ? "AI 风险定价" : "AI risk pricing"}</p>
+            <h3 className="mt-4 text-4xl font-semibold capitalize">{risk.tier} risk fee</h3>
             <p className="mt-3 text-3xl font-semibold">{risk.rateBps / 100}%</p>
             <p className="mt-4 text-sm leading-6 text-muted-strong">{risk.reasons[0]}</p>
           </div>
         </div>
-      ),
-    },
-    {
-      id: "detail",
-      label: "Detail",
-      labelZh: "详情",
-      tone: "accent",
-      content: selected ? (
-        <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="cube-list-item">
-            <p className="font-mono text-xs text-accent-soft">{railLabel(selected.paymentRail)}</p>
-            <h2 className="mt-3 text-4xl font-semibold leading-tight">
-              {zh ? selected.titleZh : selected.title}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-strong">
-              {zh ? selected.summaryZh : selected.summary}
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-4">
-              <Summary title="Reward" value={`$${(selected.bountyCents / 100).toLocaleString()}`} detail="Escrowed" />
-              <Summary title="Fee" value={`${selected.feeRateBps / 100}%`} detail={selected.feeTier} />
-              <Summary title="Submits" value={String(selected.submissions)} detail="Blind" />
-              <Summary title="Status" value={selected.status} detail="Audit ready" />
+      </Section>
+
+      <Section id="detail" kicker={zh ? "详情与交付" : "Detail and delivery"} title="Submit, judge, release">
+        {selected ? (
+          <div className="task-split">
+            <div className="task-panel">
+              <p className="font-mono text-xs text-accent-soft">
+                {railLabel(selected.paymentRail)}
+              </p>
+              <h2 className="mt-3 text-4xl font-semibold leading-tight">
+                {zh ? selected.titleZh : selected.title}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-muted-strong">
+                {zh ? selected.summaryZh : selected.summary}
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-4">
+                <Summary
+                  detail="Escrowed"
+                  title="Reward"
+                  value={`$${(selected.bountyCents / 100).toLocaleString()}`}
+                />
+                <Summary
+                  detail={selected.feeTier}
+                  title="Fee"
+                  value={`${selected.feeRateBps / 100}%`}
+                />
+                <Summary detail="Blind" title="Submits" value={String(selected.submissions)} />
+                <Summary detail="Audit ready" title="Status" value={selected.status} />
+              </div>
+            </div>
+            <div className="task-panel">
+              <h3 className="text-xl font-semibold">Blind submission</h3>
+              <button className="tw-button secondary mt-4 w-full" type="button">
+                <UploadSimple size={17} weight="bold" />
+                Submit blind work
+              </button>
+              <Field label="Submission note">
+                <textarea
+                  className="tw-input min-h-28"
+                  onChange={(event) => setSubmissionNote(event.target.value)}
+                  value={submissionNote}
+                />
+              </Field>
+              <button
+                className="tw-button accent mt-4 w-full"
+                onClick={submitBlindWork}
+                type="button"
+              >
+                Send blind submission
+              </button>
+              <button className="tw-button mt-3 w-full" onClick={chooseWinner} type="button">
+                <Trophy size={17} weight="bold" />
+                Select winner
+              </button>
             </div>
           </div>
-          <div className="cube-list-item">
-            <h3 className="text-xl font-semibold">Blind submission</h3>
-            <button className="tw-button secondary mt-4 w-full" type="button">
-              <UploadSimple size={17} weight="bold" />
-              Submit blind work
-            </button>
-            <Field label="Submission note">
-              <textarea
-                className="tw-input min-h-28"
-                onChange={(event) => setSubmissionNote(event.target.value)}
-                value={submissionNote}
-              />
-            </Field>
-            <button className="tw-button accent mt-4 w-full" onClick={submitBlindWork} type="button">
-              Send blind submission
-            </button>
-            <button className="tw-button mt-3 w-full" onClick={chooseWinner} type="button">
-              <Trophy size={17} weight="bold" />
-              Select winner
-            </button>
+        ) : null}
+      </Section>
+
+      <Section id="submissions" kicker={zh ? "动态" : "Live activity"} title="Submission and payout stream">
+        <div className="task-split">
+          <div className="task-list" data-testid="bounty-activity">
+            {activities.map((activity) => (
+              <article className="task-panel compact" key={activity.id}>
+                <p className="font-mono text-xs text-muted">{activity.kind}</p>
+                <p className="mt-2 font-semibold">{activity.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="task-panel-grid three" id="mine">
+            <Summary detail="Funded contests" title="Posted" value="2" />
+            <Summary detail="Blind entries waiting" title="Submitted" value="4" />
+            <Summary detail="Opportunities in watchlist" title="Agent tracked" value="9" />
           </div>
         </div>
-      ) : null,
-    },
-  ];
-
-  return (
-    <main>
-      <FluidCubeStage
-        faces={faces}
-        initialFace="trending"
-        title="Bounty Board"
-        titleZh="悬赏公告板"
-      />
+      </Section>
     </main>
+  );
+}
+
+function Section({
+  id,
+  kicker,
+  title,
+  children,
+}: {
+  id: string;
+  kicker: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="task-section" id={id}>
+      <div className="task-page-shell">
+        <div className="task-section-header">
+          <p className="task-kicker">{kicker}</p>
+          <h2>{title}</h2>
+        </div>
+        {children}
+      </div>
+    </section>
   );
 }
 
 function BountyRow({
   bounty,
   onSelect,
+  selected,
   zh,
 }: {
   bounty: MarketplaceBounty;
   onSelect: () => void;
+  selected: boolean;
   zh: boolean;
 }) {
   return (
-    <button className="cube-list-item text-left transition hover:-translate-y-0.5" onClick={onSelect} type="button">
+    <button
+      className={`task-list-row ${selected ? "active" : ""}`}
+      onClick={onSelect}
+      type="button"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold">{zh ? bounty.titleZh : bounty.title}</h3>
@@ -454,7 +469,7 @@ function Summary({
   detail: string;
 }) {
   return (
-    <div className="cube-metric">
+    <div className="task-metric">
       <span>{title}</span>
       <strong>{value}</strong>
       <p className="mt-2 text-xs text-muted">{detail}</p>

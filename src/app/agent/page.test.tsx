@@ -14,20 +14,20 @@ describe("Agent product page", () => {
         name: /Autonomous hunter agents/i,
       }),
     ).toBeDefined();
-    expect(screen.getByTestId("fluid-cube-stage")).toBeDefined();
+    expect(screen.getByTestId("agent-page")).toBeDefined();
     expect(screen.getByRole("link", { name: /learn more/i }).getAttribute("href")).toBe(
       "/agent/knowledge-base",
     );
+    expect(screen.getByRole("heading", { name: /Configure the hunter agent/i })).toBeDefined();
+    expect(screen.getByRole("heading", { name: /Every agent action stays auditable/i })).toBeDefined();
 
     await user.click(screen.getByRole("button", { name: /free create/i }));
     expect(screen.getByText(/Autopilot agent created/i)).toBeDefined();
 
-    await user.click(screen.getByRole("tab", { name: /Autopilot/i }));
     await user.click(screen.getAllByRole("button", { name: /run autopilot/i })[0]);
     expect(screen.getByText(/credits left/i)).toBeDefined();
     expect(screen.getAllByText(/Autopilot execution completed/i).length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole("tab", { name: /Logs/i }));
     await user.click(screen.getByRole("button", { name: /try external submit/i }));
     expect(await screen.findByText(/MVP agents cannot apply/i)).toBeDefined();
   });
@@ -36,7 +36,6 @@ describe("Agent product page", () => {
     const user = userEvent.setup();
     render(<Page />);
 
-    await user.click(screen.getByRole("tab", { name: /Sources/i }));
     await user.clear(await screen.findByLabelText(/target url/i));
     await user.type(
       screen.getByLabelText(/target url/i),

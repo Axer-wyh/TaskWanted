@@ -13,7 +13,6 @@ import {
 } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { FluidCubeStage, type FluidCubeFace } from "@/components/fluid-cube-stage";
 import { useTaskWantedLocale } from "@/components/site-header";
 import {
   ingestExternalOpportunity,
@@ -175,23 +174,21 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
     }
   }
 
-  const faces: FluidCubeFace[] = [
-    {
-      id: "agent-hero",
-      label: "Autonomous",
-      labelZh: "自主",
-      tone: "hero",
-      content: (
-        <div className="cube-face-grid two">
+  return (
+    <main className="task-page" data-testid="agent-page" data-theme="dark">
+      <section className="task-hero">
+        <div className="task-page-shell task-hero-grid">
           <div>
-            <p className="cube-kicker">{zh ? "自主赏金猎人 Agent" : "Autonomous hunter agents"}</p>
-            <h1 className="cube-title">{zh ? "自主 Agent 被动赚钱。" : "Autonomous hunter agents"}</h1>
-            <p className="cube-copy">
+            <p className="task-kicker">{zh ? "自主赏金猎人 Agent" : "Autonomous hunter agents"}</p>
+            <h1 className="task-title">
+              {zh ? "让 Agent 替你赚取被动收益。" : "Autonomous hunter agents"}
+            </h1>
+            <p className="task-copy">
               {zh
-                ? "免费创建 Agent，让它发现机会、自动执行可授权任务，并持续积累被动收益。"
+                ? "免费创建 Agent，让它自主发现机会、自动完成可授权任务，并把可提交状态交给你确认。"
                 : "Create an agent that discovers tasks, prepares delivery, automates allowed work, and compounds passive bounty income."}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="task-actions">
               <button className="tw-button accent" onClick={createFreeAgent} type="button">
                 <Sparkle size={17} weight="bold" />
                 {zh ? "免费创建" : "Free create"}
@@ -202,57 +199,51 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
               </Link>
             </div>
           </div>
-          <div className="cube-metric-grid">
-            <Metric label="Credit balance" value={credits.toLocaleString()} />
-            <Metric label="Agents created" value={agentCreated ? "1" : "0"} />
-            <Metric label="Autopilot tasks" value="6" />
-            <Metric label="Passive earnings" value="$420" />
+          <div className="task-cube-scene" aria-hidden="true">
+            <div className="task-cube">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <span className={`task-cube-face face-${index}`} key={index} />
+              ))}
+            </div>
           </div>
         </div>
-      ),
-    },
-    {
-      id: "create-agent",
-      label: "Free create",
-      labelZh: "免费创建",
-      tone: "accent",
-      content: (
-        <div className="cube-face-grid two">
-          <div>
-            <p className="cube-kicker">{zh ? "创建设置" : "Create setup"}</p>
-            <h2 className="mt-4 text-5xl font-semibold leading-none">Free create</h2>
-            <p className="cube-copy">
+      </section>
+
+      <Section id="agent-overview" kicker={zh ? "收益概览" : "Agent yield"} title="Passive earning cockpit">
+        <div className="task-panel-grid four">
+          <Metric label="Credit balance" value={credits.toLocaleString()} />
+          <Metric label="Agents created" value={agentCreated ? "1" : "0"} />
+          <Metric label="Autopilot tasks" value="6" />
+          <Metric label="Passive earnings" value="$420" />
+        </div>
+      </Section>
+
+      <Section id="create-agent" kicker={zh ? "免费创建" : "Free create"} title="Configure the hunter agent">
+        <div className="task-split">
+          <div className="task-panel">
+            <p className="task-copy mt-0">
               {zh
-                ? "配置技能、语言、最低赏金、风险边界和可投入时间。"
-                : "Set skills, language, minimum bounty, risk limit, and available work time."}
+                ? "配置技能、语言、最低赏金、风险边界和可投入时间。创建后 Agent 会先发现机会，再准备执行方案。"
+                : "Set skills, language, minimum bounty, risk limit, and available work time before the agent starts hunting."}
             </p>
             <button className="tw-button accent mt-8" onClick={createFreeAgent} type="button">
               <Robot size={17} weight="bold" />
-              {zh ? "免费创建 hunter agent" : "Free create hunter agent"}
+              {zh ? "创建 hunter agent" : "Create hunter agent"}
             </button>
           </div>
-          <div className="cube-list">
+          <div className="task-list">
             <ConfigLine label="Skills" value="Research, writing, QA, AI agents" />
             <ConfigLine label="Language" value="English, Chinese, bilingual" />
             <ConfigLine label="Risk boundary" value="No unauthorized apply, bid, accept, submit" />
             <ConfigLine label="Minimum bounty" value="$180" />
           </div>
         </div>
-      ),
-    },
-    {
-      id: "autopilot",
-      label: "Autopilot",
-      labelZh: "自动执行",
-      tone: "dark",
-      content: (
-        <div className="cube-face-grid two">
-          <div>
-            <p className="cube-kicker">{zh ? "自动执行" : "Autopilot execution"}</p>
-            <h2 className="mt-4 text-5xl font-semibold leading-none">
-              {zh ? "允许的任务，自动推进。" : "Allowed work moves by itself."}
-            </h2>
-            <p className="cube-copy">
+      </Section>
+
+      <Section id="autopilot" kicker={zh ? "自动执行" : "Autopilot"} title="Allowed work moves by itself">
+        <div className="task-split">
+          <div className="task-panel accent-panel">
+            <p className="task-copy mt-0">
               {zh
                 ? "Agent 自动拆解任务、收集资料、生成草稿、检查交付包，需要提交时暂停等待确认。"
                 : "The agent plans, researches, drafts, checks, and pauses before actions that need approval."}
@@ -262,31 +253,32 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
               {zh ? "运行 Autopilot" : "Run autopilot"}
             </button>
           </div>
-          <div className="cube-list">
+          <div className="task-list">
             <ConfigLine label="Credits left" value={credits.toLocaleString()} />
             {passiveStats.map((stat) => (
-              <ConfigLine key={stat.label} label={stat.label} value={`${stat.value} - ${stat.detail}`} />
+              <ConfigLine
+                key={stat.label}
+                label={stat.label}
+                value={`${stat.value} - ${stat.detail}`}
+              />
             ))}
           </div>
         </div>
-      ),
-    },
-    {
-      id: "sources",
-      label: "Sources",
-      labelZh: "来源",
-      tone: "plain",
-      content: (
-        <div className="grid gap-5 lg:grid-cols-[0.84fr_1.16fr]">
-          <div className="cube-list-item">
+      </Section>
+
+      <Section id="sources" kicker={zh ? "外部机会" : "External sources"} title="Discover work beyond TaskWanted">
+        <div className="task-split narrow-left">
+          <div className="task-panel">
             <div className="flex items-center gap-2">
               <Browsers size={22} weight="duotone" />
-              <h2 className="text-3xl font-semibold">{zh ? "外部来源" : "External sources"}</h2>
+              <h2 className="text-3xl font-semibold">{zh ? "本地监控源" : "Local watcher source"}</h2>
             </div>
             <Field label="Target URL">
               <input
                 className="tw-input"
-                onChange={(event) => setWatcherForm((current) => ({ ...current, url: event.target.value }))}
+                onChange={(event) =>
+                  setWatcherForm((current) => ({ ...current, url: event.target.value }))
+                }
                 value={watcherForm.url}
               />
             </Field>
@@ -299,15 +291,33 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
                 value={watcherForm.keywords}
               />
             </Field>
+            <Field label="Schedule">
+              <input
+                className="tw-input"
+                onChange={(event) =>
+                  setWatcherForm((current) => ({ ...current, schedule: event.target.value }))
+                }
+                value={watcherForm.schedule}
+              />
+            </Field>
+            <Field label="Parsing hints">
+              <textarea
+                className="tw-input min-h-24"
+                onChange={(event) =>
+                  setWatcherForm((current) => ({ ...current, hints: event.target.value }))
+                }
+                value={watcherForm.hints}
+              />
+            </Field>
             <button className="tw-button accent mt-5" onClick={syncLocalSource} type="button">
               <PlugsConnected size={17} weight="bold" />
               Sync local source
             </button>
             <p className="mt-4 text-sm leading-6 text-muted-strong">{watcherMessage}</p>
           </div>
-          <div className="cube-list" data-testid="watcher-results">
+          <div className="task-list" data-testid="watcher-results">
             {opportunities.map((opportunity) => (
-              <article className="cube-list-item" key={opportunity.id}>
+              <article className="task-panel compact" key={opportunity.id}>
                 <p className="font-mono text-xs text-muted">{opportunity.platform}</p>
                 <h3 className="mt-2 font-semibold">{opportunity.title}</h3>
                 <p className="mt-2 text-sm text-muted-strong">{opportunity.url}</p>
@@ -315,54 +325,55 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
             ))}
           </div>
         </div>
-      ),
-    },
-    {
-      id: "earnings",
-      label: "Earnings",
-      labelZh: "收益",
-      tone: "accent",
-      content: (
-        <div className="cube-face-grid two">
-          <div className="cube-face-grid three">
+      </Section>
+
+      <Section id="earnings" kicker={zh ? "Credits 与收益" : "Credits and earnings"} title="Fund execution, attribute payouts">
+        <div className="task-split">
+          <div className="task-panel-grid three">
             {passiveStats.map((stat) => (
-              <Metric key={stat.label} label={stat.label} value={stat.value} />
+              <Summary key={stat.label} detail={stat.detail} title={stat.label} value={stat.value} />
             ))}
           </div>
-          <div className="cube-list-item">
-            <p className="cube-kicker">{zh ? "Agent credits" : "Agent credits"}</p>
-            <h2 className="mt-4 text-5xl font-semibold leading-none">
-              {credits.toLocaleString()}
-            </h2>
-            <p className="cube-copy">
-              {zh
-                ? "猎人用 credits 购买 agent 执行能力，所有消耗都进入日志。"
-                : "Hunters fund agent execution with credits, and every spend is logged."}
-            </p>
-            <button className="tw-button accent mt-6" onClick={() => buyPack(1_000)} type="button">
-              {zh ? "购买 1,000 credits" : "Buy 1,000 credits"}
-            </button>
+          <div className="task-list">
+            {snapshot.agentCreditPacks.map((pack) => (
+              <button
+                className="task-list-row"
+                key={pack.name}
+                onClick={() => buyPack(pack.credits)}
+                type="button"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-semibold">{pack.name}</h3>
+                    <p className="mt-2 text-sm text-muted-strong">{pack.bestFor}</p>
+                  </div>
+                  <span className="rounded-[8px] bg-foreground px-3 py-2 font-mono text-sm text-background">
+                    ${pack.priceUsd}
+                  </span>
+                </div>
+                <p className="mt-3 font-mono text-xs text-muted">
+                  {pack.credits.toLocaleString()} credits
+                </p>
+              </button>
+            ))}
           </div>
         </div>
-      ),
-    },
-    {
-      id: "logs",
-      label: "Logs",
-      labelZh: "日志",
-      tone: "plain",
-      content: (
-        <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
-          <div className="cube-list">
+      </Section>
+
+      <Section id="logs" kicker={zh ? "日志与边界" : "Logs and guardrails"} title="Every agent action stays auditable">
+        <div className="task-split">
+          <div className="task-list">
             {runs.map((run) => (
-              <article className="cube-list-item" key={run.id}>
+              <article className="task-panel compact" key={run.id}>
                 <p className="font-semibold">{run.title}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-strong">{run.detail}</p>
-                {run.charged ? <p className="mt-2 font-mono text-xs text-muted">-{run.charged} credits</p> : null}
+                {run.charged ? (
+                  <p className="mt-2 font-mono text-xs text-muted">-{run.charged} credits</p>
+                ) : null}
               </article>
             ))}
           </div>
-          <div className="cube-list-item">
+          <div className="task-panel">
             <ShieldCheck size={24} weight="duotone" />
             <h2 className="mt-4 text-2xl font-semibold">Policy guardrails</h2>
             <p className="mt-3 text-sm leading-6 text-muted-strong">
@@ -379,19 +390,32 @@ export function AgentExperience({ snapshot }: AgentExperienceProps) {
             ) : null}
           </div>
         </div>
-      ),
-    },
-  ];
-
-  return (
-    <main>
-      <FluidCubeStage
-        faces={faces}
-        initialFace="agent-hero"
-        title="Autonomous hunter agents"
-        titleZh="自主赏金猎人 Agent"
-      />
+      </Section>
     </main>
+  );
+}
+
+function Section({
+  id,
+  kicker,
+  title,
+  children,
+}: {
+  id: string;
+  kicker: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="task-section" id={id}>
+      <div className="task-page-shell">
+        <div className="task-section-header">
+          <p className="task-kicker">{kicker}</p>
+          <h2>{title}</h2>
+        </div>
+        {children}
+      </div>
+    </section>
   );
 }
 
@@ -406,16 +430,34 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="cube-metric">
+    <div className="task-metric">
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
   );
 }
 
+function Summary({
+  title,
+  value,
+  detail,
+}: {
+  title: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="task-metric">
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <p className="mt-2 text-xs text-muted">{detail}</p>
+    </div>
+  );
+}
+
 function ConfigLine({ label, value }: { label: string; value: string }) {
   return (
-    <article className="cube-list-item">
+    <article className="task-panel compact">
       <p className="font-mono text-xs text-muted">{label}</p>
       <p className="mt-2 font-semibold">{value}</p>
     </article>
